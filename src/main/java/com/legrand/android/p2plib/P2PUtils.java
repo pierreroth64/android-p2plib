@@ -49,12 +49,4 @@ public class P2PUtils {
         bundle.putBoolean("is_available", presence.isAvailable());
         return bundle;
     }
-
-    public static String getDomain() {
-        return P2PConstants.P2P_CONF_DOMAIN;
-    }
-
-    public static String createDeviceIdFromUUI(String uui) {
-        return "eliot-" + uui + "@" + P2PUtils.getDomain();
-    }
 }

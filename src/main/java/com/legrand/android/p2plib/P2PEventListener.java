@@ -38,18 +38,4 @@ public interface P2PEventListener {
      */
     void onDataSent(String message);
 
-    /**
-     * Handler called when credentials have been received by the P2P service
-     */
-    void onReceivedCreds(String username, String password);
-
-    /**
-     * Handler called when credentials have changed
-     */
-    void onCredsChanged(String username, String password);
-
-    /**
-     * Handler called when registering to the PéP service is done
-     */
-    void onServiceRegisterDone();
 }

@@ -10,7 +10,6 @@ package com.legrand.android.p2plib;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -39,7 +38,8 @@ public class P2PMessenger {
     private Messenger mOwnMessenger;
     private HandlerThread mHandlerThread;
     private List<P2PReceiver> mReceivers = new ArrayList<>();
-    private List<P2PEventListener> mEventListerners = new ArrayList<>();
+    private List<P2PEventListener> mEventListeners = new ArrayList<>();
+    private List<P2PServiceListener> mServiceListeners = new ArrayList<>();
     private boolean mBound;
     private P2PInputChecker mP2PInputChecker = new P2PInputChecker();
 
@@ -85,7 +85,7 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PServiceListener listener: mServiceListeners)
                                 listener.onServiceRegisterDone();
                         }
                     }).start();
@@ -117,7 +117,7 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PEventListener listener: mEventListeners)
                                 listener.onConnected();
                         }
                     }).start();
@@ -127,7 +127,7 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PEventListener listener: mEventListeners)
                                 listener.onDisconnected();
                         }
                     }).start();
@@ -137,7 +137,7 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PEventListener listener: mEventListeners)
                                 listener.onAccountCreated(mBundle.getString("username"),
                                         mBundle.getString("password"));
                         }
@@ -148,27 +148,40 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PEventListener listener: mEventListeners)
                                 listener.onAuthenticated(mBundle.getString("username"));
                         }
                     }).start();
                     break;
+
                 case P2PConstants.MSG_CLIENT_P2P_EVENT_DATA_SENT:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PEventListener listener: mEventListeners)
                                 listener.onDataSent(mBundle.getString("message"));
                         }
                     }).start();
                     break;
+
+                case P2PConstants.MSG_CLIENT_P2P_CONF:
+                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PServiceListener listener: mServiceListeners)
+                                listener.onConfChanged(mBundle);
+                        }
+                    }).start();
+                    break;
+
                 case P2PConstants.MSG_CLIENT_P2P_EVENT_ACK_CREDS:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PServiceListener listener: mServiceListeners)
                                 listener.onReceivedCreds(mBundle.getString("username"),
                                         mBundle.getString("password"));
                         }
@@ -180,7 +193,7 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListerners)
+                            for (P2PServiceListener listener: mServiceListeners)
                                 listener.onCredsChanged(mBundle.getString("username"),
                                                         mBundle.getString("password"));
                         }
@@ -192,22 +205,6 @@ public class P2PMessenger {
                     super.handleMessage(message);
             }
         }
-    }
-
-    /**
-     * Add a P2PReceiver to the messanger
-     * @param receiver to be added
-     */
-    public void addReceiver(P2PReceiver receiver) {
-        mReceivers.add(receiver);
-    }
-
-    /**
-     * Add a P2PEventListener to the messenger
-     * @param listener
-     */
-    public void addEventListener(P2PEventListener listener) {
-        mEventListerners.add(listener);
     }
 
     /**
@@ -276,6 +273,31 @@ public class P2PMessenger {
 
     ///////// PUBLIC API ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Add a P2PReceiver to the messanger
+     * @param receiver to be added
+     */
+    public void addReceiver(P2PReceiver receiver) {
+        mReceivers.add(receiver);
+    }
+
+    /**
+     * Add a P2PEventListener to the messenger
+     * @param listener
+     */
+    public void addEventListener(P2PEventListener listener) {
+        mEventListeners.add(listener);
+    }
+
+    /**
+     * Add a P2PServiceListener to the messenger
+     * @param listener
+     */
+    public void addServiceListener(P2PServiceListener listener) {
+        mServiceListeners.add(listener);
+    }
+
+
     public void onStart(Context context) {
         Log.d(TAG, "binding to P2P service (" + mName +")");
         mContext = context;
@@ -285,7 +307,7 @@ public class P2PMessenger {
     }
 
     public void onStop(Context context) {
-        Log.d(TAG, "unbinding from P2P service (" + mName +")");
+        Log.d(TAG, "unbinding from P2P service (" + mName + ")");
         mContext = null;
         if (mBound) {
             context.unbindService(mP2PServConnection);
@@ -321,6 +343,32 @@ public class P2PMessenger {
         bundle.putString("password", password);
         msg.setData(bundle);
         sendMsgToP2Psrvc(msg, "sending credentials to P2P service (user: " + username + ")...");
+    }
+
+    /**
+     * Set the server configuration
+     * @param conf must contain the following keys:
+     *             'hostName': (string) the server hostname
+     *             'port': (int) the server port
+     *             'domainName': (string) the domain name (such as 'my.domain.net')
+     *             Optional keys:
+     *             'SSLPin': (String) to avoid SSL certificate check, you can provide a Pin
+     *             'pingInterval': (int) ping interval in seconds
+     *             'reconnectionEnabled: (Boolean) if true, enables automatic reconnectio
+     *             'reconnectionDelay': (int) delay in seconds before trying to reconnect
+     */
+    public void setServerConf(Bundle conf) {
+        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_SET_SERVER_CONF, 0, 0);
+        msg.setData(new Bundle(conf));
+        sendMsgToP2Psrvc(msg, "setting P2P conf...");
+    }
+
+    /**
+     * Request Server
+     */
+    public void requestServerConf() {
+        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_GET_SERVER_CONF, 0, 0);
+        sendMsgToP2Psrvc(msg, "getting P2P conf...");
     }
 
     /**

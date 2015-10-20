@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Set;
 
-
 /**
  * The P2PService class is an android long running service which handles
  * the interactions with the P2P server and provide an interface to communicate
@@ -50,11 +49,14 @@ public class P2PService extends Service {
     private Messenger mMessenger;
     private Hashtable<String, Messenger> mClientMessengers = new Hashtable<>(); // Messenger name <-> Messenger object
     private Hashtable<String, Chat> mChats = new Hashtable<>(); // JID <-> Chat object
-    private String mCurrentUser = "";
-    private String mCurrentPwd = "";
+    public String mCurrentUserName = "";
+    public String mCurrentPassword = "";
+    private P2PConf mConf;
     private Roster mRoster = null;
 
+
     public P2PService() {
+        mConf = new P2PConf();
     }
 
     @Override
@@ -75,7 +77,7 @@ public class P2PService extends Service {
         public void connected(XMPPConnection connection) {
             Log.d(TAG, "conn state: connected");
             sendConnectionStatusToClientMessengers();
-            login(mCurrentUser, mCurrentPwd);
+            login(mCurrentUserName, mCurrentPassword);
         }
 
         @Override
@@ -148,6 +150,16 @@ public class P2PService extends Service {
                     if (credsChanged(username, password))
                         sendSrvcCredsChanged(username, password);
                     break;
+                case P2PConstants.MSG_SRVC_P2P_SET_SERVER_CONF:
+                    if (setServerConf(message.getData())) {
+                        if (mP2PConnection.isConnected()) {
+                            reconnect();
+                        }
+                    }
+                    break;
+                case P2PConstants.MSG_SRVC_P2P_GET_SERVER_CONF:
+                    sendServerConfToClientMessengers();
+                    break;
                 case P2PConstants.MSG_SRVC_P2P_LOGIN:
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
@@ -177,13 +189,63 @@ public class P2PService extends Service {
     }
 
     /**
+     * Set server configuration
+     * @param conf bundle with key-value pairs
+     * @return true if conf changed
+     */
+    private Boolean setServerConf(Bundle conf) {
+
+        Boolean confChanged = false;
+        for (String confKey: conf.keySet()) {
+            if (mConf.mSupportedParams.contains(confKey)) {
+                confChanged = true;
+            }
+        }
+        if (conf.containsKey("hostName"))
+            mConf.mHostName = conf.getString("hostName");
+        if (conf.containsKey("port"))
+            mConf.mPort = conf.getInt("port");
+        if (conf.containsKey("domainName"))
+            mConf.mDomainName = conf.getString("domainName");
+        if (conf.containsKey("SSLPin"))
+            mConf.mSSLPin = conf.getString("SSLPin");
+        if (conf.containsKey("pingInterval"))
+            mConf.mPingInterval = conf.getInt("pingInterval");
+        if (conf.containsKey("reconnectionEnabled"))
+            mConf.mReconnectionEnabled = conf.getBoolean("reconnectionEnabled");
+        if (conf.containsKey("reconnectionDelay"))
+            mConf.mReconnDelaySeconds = conf.getInt("reconnectionDelay");
+
+        Log.d(TAG, "Server configuration changed");
+
+        return confChanged;
+    }
+
+    private void sendServerConfToClientMessengers() {
+        Bundle conf = P2PConf.createBundleFromConf(mConf);
+        try {
+            Set<String> names = mClientMessengers.keySet();
+            for(String name: names){
+                Message msg = Message.obtain(null, P2PConstants.MSG_CLIENT_P2P_CONF, 0, 0);
+                msg.setData(conf);
+                mClientMessengers.get(name).send(msg);
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "could not send server conf to client messengers");
+            e.printStackTrace();
+        }
+
+    }
+
+
+    /**
      * Check whether credentials changed
      * @param username is the given username to be compared to current one
      * @param password is the given password to be compared to current one
      * @return true if creds changed
      */
     private Boolean credsChanged(String username, String password) {
-        if ((username != mCurrentUser) || (password != mCurrentPwd))
+        if ((username != mCurrentUserName) || (password != mCurrentPassword))
             return true;
         else
             return false;
@@ -262,9 +324,9 @@ public class P2PService extends Service {
      * @param password
      */
     private void setCredentials(String username, String password) {
-        mCurrentUser = username;
-        mCurrentPwd = password;
-        Log.d(TAG, "set credentials for " + mCurrentUser);
+        mCurrentUserName = username;
+        mCurrentPassword = password;
+        Log.d(TAG, "set credentials for " + username);
     }
 
     /**
@@ -284,9 +346,9 @@ public class P2PService extends Service {
                 try {
                     if (!mP2PConnection.isAuthenticated()) {
                         mP2PConnection.login(username, password);
-                        Log.d(TAG, "logged into P2P as " + mCurrentUser);
+                        Log.d(TAG, "logged into P2P as " + mCurrentUserName);
                     } else {
-                        Log.d(TAG, "Already logged into P2P as " + mCurrentUser);
+                        Log.d(TAG, "Already logged into P2P as " + mCurrentUserName);
                     }
                 } catch (SmackException | IOException | XMPPException | IllegalArgumentException e) {
                     Log.w(TAG, "could not log into P2P server");
@@ -406,7 +468,7 @@ public class P2PService extends Service {
         Bundle bundle;
         if (mP2PConnection.isAuthenticated()) {
             bundle = new Bundle();
-            bundle.putString("username", mCurrentUser);
+            bundle.putString("username", mCurrentUserName);
             sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_AUTHENTICATED, bundle);
         } else if (mP2PConnection.isConnected()) {
             sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_CONNECTED, null);
@@ -499,7 +561,11 @@ public class P2PService extends Service {
      */
     private AbstractXMPPConnection createConnection() {
         Log.d(TAG, "creating connection...");
-        AbstractXMPPConnection conn = new P2PConnectionBuilder().createConnection();
+        if (P2PConf.hasMinimalConf(mConf)) {
+            Log.d(TAG, "P2P configuration is not complete, using default one");
+            mConf = P2PConf.createDefaultConf();
+        }
+        AbstractXMPPConnection conn = new P2PConnectionBuilder().createConnection(mConf);
         conn.addConnectionListener(new P2PConnectionListener());
         mRoster = Roster.getInstanceFor(conn);
         mRoster.addRosterListener(new P2PRosterListener() {
