@@ -561,7 +561,7 @@ public class P2PService extends Service {
      */
     private AbstractXMPPConnection createConnection() {
         Log.d(TAG, "creating connection...");
-        if (P2PConf.hasMinimalConf(mConf)) {
+        if (! P2PConf.hasMinimalConf(mConf)) {
             Log.d(TAG, "P2P configuration is not complete, using default one");
             mConf = P2PConf.createDefaultConf();
         }
