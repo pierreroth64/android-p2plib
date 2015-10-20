@@ -9,6 +9,7 @@ package com.legrand.android.p2plib;
 
 import android.os.Bundle;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,8 +23,7 @@ public class P2PConf {
     public int mReconnDelaySeconds = 10;
     public Boolean mReconnectionEnabled = false;
     public int mPingInterval = 60;
-
-    public List<String> mSupportedParams;
+    public List<String> mSupportedParams = new ArrayList<>();
 
     public P2PConf() {
         mSupportedParams.add("hostName");
