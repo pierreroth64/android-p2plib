@@ -17,6 +17,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.legrand.android.p2plib.exceptions.P2PException;
+import com.legrand.android.p2plib.exceptions.P2PExceptionConnError;
+
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.SmackException;
@@ -61,7 +64,6 @@ public class P2PService extends Service {
 
     @Override
     public void onCreate() {
-        mP2PConnection = createConnection();
         mMessenger = createMessenger();
     }
 
@@ -127,6 +129,7 @@ public class P2PService extends Service {
         public void handleMessage(Message msg) {
             String username, password;
             Message message = Message.obtain(msg);
+
             switch (message.what) {
                 case P2PConstants.MSG_SRVC_REGISTER:
                     // The bound client sent us its messenger! We'll be able to reply to it
@@ -152,7 +155,7 @@ public class P2PService extends Service {
                     break;
                 case P2PConstants.MSG_SRVC_P2P_SET_SERVER_CONF:
                     if (setServerConf(message.getData())) {
-                        if (mP2PConnection.isConnected()) {
+                        if (mP2PConnection != null && mP2PConnection.isConnected()) {
                             reconnect();
                         }
                     }
@@ -186,6 +189,15 @@ public class P2PService extends Service {
                     super.handleMessage(message);
             }
         }
+    }
+
+    /**
+     * Check whether the connection is created and raise an exception if not
+     * @throws P2PExceptionConnError
+     */
+    private void checkConnection() throws P2PExceptionConnError {
+        if (mP2PConnection == null)
+            throw new P2PExceptionConnError("connection not setup (null)");
     }
 
     /**
@@ -344,6 +356,10 @@ public class P2PService extends Service {
                 String password = mBundle.getString("password");
                 Log.d(TAG, "login to P2P server with username: " + username + "...");
                 try {
+                    if (mP2PConnection == null) {
+                        Log.w(TAG, "could not login since connection not setup");
+                        return;
+                    }
                     if (!mP2PConnection.isAuthenticated()) {
                         mP2PConnection.login(username, password);
                         Log.d(TAG, "logged into P2P as " + mCurrentUserName);
@@ -361,26 +377,32 @@ public class P2PService extends Service {
     /**
      * May create a chat for this JID if not already created
      * @param JID to create the chat with
-     * @return the created chat
+     * @return the created chat or null on failure
      */
     private Chat mayCreateChatForJID(String JID) {
 
         Chat chat = mChats.get(JID);
         if (chat != null) return chat;
 
-        ChatManager chatmanager = ChatManager.getInstanceFor(mP2PConnection);
-        chat = chatmanager.createChat(JID, new ChatMessageListener() {
-            public void processMessage(Chat chat, org.jivesoftware.smack.packet.Message message) {
-                Bundle bundle = new Bundle();
-                bundle.putString("message", message.getBody());
-                bundle.putString("from", P2PUtils.extractWhoFromResource(message.getFrom()));
-                bundle.putString("jid", P2PUtils.extractJIDFromResource(message.getFrom()));
-                sendDataToClientMessengers(bundle);
-            }
-        });
-        Log.d(TAG, "chat created for device: " + JID);
-        mChats.put(JID, chat);
-        return chat;
+        try {
+            checkConnection();
+            ChatManager chatmanager = ChatManager.getInstanceFor(mP2PConnection);
+            chat = chatmanager.createChat(JID, new ChatMessageListener() {
+                public void processMessage(Chat chat, org.jivesoftware.smack.packet.Message message) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString("message", message.getBody());
+                    bundle.putString("from", P2PUtils.extractWhoFromResource(message.getFrom()));
+                    bundle.putString("jid", P2PUtils.extractJIDFromResource(message.getFrom()));
+                    sendDataToClientMessengers(bundle);
+                }
+            });
+            Log.d(TAG, "chat created for device: " + JID);
+            mChats.put(JID, chat);
+            return chat;
+        } catch (P2PExceptionConnError e) {
+            Log.e(TAG, "could not create chat for device" + JID + "(" + e.getMessage() +")");
+            return null;
+        }
     }
 
     /**
@@ -390,9 +412,10 @@ public class P2PService extends Service {
         Thread thread = new Thread(new Runnable() {
             public void run() {
                 Log.d(TAG, "disconnecting from P2P server...");
-                if (mP2PConnection != null)
+                if (mP2PConnection != null) {
                     mP2PConnection.disconnect();
-                mP2PConnection = null;
+                    mP2PConnection = null;
+                }
                 Log.d(TAG, "disconnected from P2P server");
             }
         });
@@ -429,14 +452,15 @@ public class P2PService extends Service {
                 String password = mBundle.getString("password");
                 try {
                     Log.d(TAG, "creating account for: " + username);
+                    checkConnection();
                     AccountManager accountMgr = AccountManager.getInstance(mP2PConnection);
                     accountMgr.createAccount(username, password);
                     Bundle bundle = new Bundle();
                     bundle.putString("username", username);
                     bundle.putString("password", password);
                     sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED, bundle);
-                } catch (SmackException|XMPPException e) {
-                    Log.e(TAG, "error when creating xmpp account for: " + username);
+                } catch (SmackException|XMPPException|P2PExceptionConnError e) {
+                    Log.e(TAG, "error when creating xmpp account for: " + username + "(" + e.getMessage() + ")");
                     e.printStackTrace();
                 }
             }
@@ -466,7 +490,10 @@ public class P2PService extends Service {
      */
     private void sendConnectionStatusToClientMessengers() {
         Bundle bundle;
-        if (mP2PConnection.isAuthenticated()) {
+
+        if (mP2PConnection == null) {
+            sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_DISCONNECTED, null);
+        } else if (mP2PConnection.isAuthenticated()) {
             bundle = new Bundle();
             bundle.putString("username", mCurrentUserName);
             sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_AUTHENTICATED, bundle);
@@ -530,13 +557,16 @@ public class P2PService extends Service {
                 String to = mBundle.getString("p2p_to");
                 try {
                     Chat chat = mayCreateChatForJID(to);
+                    if (chat == null) {
+                        throw new P2PException("could not create chat for JID " + to);
+                    }
                     Log.d(TAG, "sending data: " + message + " to " + chat.getParticipant() + "...");
                     chat.sendMessage(message);
                     Bundle bundle = new Bundle();
                     bundle.putString("message", message);
                     sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_DATA_SENT, bundle);
-                } catch (SmackException e) {
-                    Log.e(TAG, "error when sending xmpp message");
+                } catch (SmackException|P2PException e) {
+                    Log.e(TAG, "error when sending xmpp message (" + e.getMessage() + ")");
                     e.printStackTrace();
                 }
             }
@@ -602,10 +632,11 @@ public class P2PService extends Service {
                 Presence subscribe = new Presence(Presence.Type.subscribe);
                 subscribe.setTo(to);
                 try {
+                    checkConnection();
                     mP2PConnection.sendStanza(subscribe);
                 }
-                catch (SmackException.NotConnectedException e) {
-                    Log.d(TAG, "could not send subscription");
+                catch (SmackException.NotConnectedException|P2PExceptionConnError e) {
+                    Log.d(TAG, "could not send subscription (" + e.getMessage() + ")");
                     e.printStackTrace();
                 }
             }
