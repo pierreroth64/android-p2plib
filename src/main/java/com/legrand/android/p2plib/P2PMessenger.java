@@ -361,6 +361,14 @@ public class P2PMessenger {
     }
 
     /**
+     * Request P2P disconnection
+     */
+    public void disconnect() {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_DISCONNECT, 0, 0);
+        sendMsgToP2Psrvc(msg, "requesting P2P disconnection...");
+    }
+
+    /**
      * Request P2P reconnection
      */
     public void reconnect() {
