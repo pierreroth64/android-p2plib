@@ -5,14 +5,12 @@
  * P2P library for Android. Provides control/monitor functionalities to Legrand Things
  */
 
-package com.legrand.android.p2plib;
+package com.legrand.android.p2plib.constants;
 
 /**
- * P2PConstants holds all the constants of the PéP library
+ * P2PMessageIDs holds all the message IDs exchanged between P2PMessenger and P2PService
  */
-public class P2PConstants {
-
-    public static final String P2P_TAG = "P2PLib";
+public class P2PMessageIDs {
 
     public static final int MSG_SRVC_P2P_CONNECT = 1;
     public static final int MSG_SRVC_P2P_DISCONNECT = 2;
@@ -37,4 +35,5 @@ public class P2PConstants {
     public static final int MSG_SRVC_P2P_SET_SERVER_CONF = 21;
     public static final int MSG_SRVC_P2P_GET_SERVER_CONF = 22;
     public static final int MSG_CLIENT_P2P_CONF = 23;
+    public static final int MSG_SRVC_P2P_ERROR = 24;
 }

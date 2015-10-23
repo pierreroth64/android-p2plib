@@ -9,6 +9,9 @@ package com.legrand.android.p2plib;
 
 import android.util.Log;
 
+import com.legrand.android.p2plib.constants.P2PGlobals;
+import com.legrand.android.p2plib.constants.P2PMessageIDs;
+
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
@@ -40,7 +43,7 @@ class P2PHostnameVerifier implements HostnameVerifier {
  */
 public class P2PConnectionBuilder {
 
-    private static final String TAG = P2PConstants.P2P_TAG + " Conn. builder";
+    private static final String TAG = P2PGlobals.P2P_TAG + " Conn. builder";
 
     /**
      * Create a connection with Legrand default settings

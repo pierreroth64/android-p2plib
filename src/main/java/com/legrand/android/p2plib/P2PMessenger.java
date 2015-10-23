@@ -24,8 +24,12 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.legrand.android.p2plib.constants.P2PErrorLevels;
+import com.legrand.android.p2plib.constants.P2PGlobals;
+import com.legrand.android.p2plib.constants.P2PMessageIDs;
 import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.listeners.P2PEventListener;
+import com.legrand.android.p2plib.listeners.P2PServiceErrorListener;
 import com.legrand.android.p2plib.listeners.P2PServiceListener;
 import com.legrand.android.p2plib.utils.P2PInputChecker;
 import com.legrand.android.p2plib.utils.P2PThread;
@@ -44,6 +48,7 @@ public class P2PMessenger {
     private List<P2PReceiver> mReceivers = new ArrayList<>();
     private List<P2PEventListener> mEventListeners = new ArrayList<>();
     private List<P2PServiceListener> mServiceListeners = new ArrayList<>();
+    private List<P2PServiceErrorListener> mServiceErrorListeners = new ArrayList<>();
     private boolean mBound;
     private P2PInputChecker mP2PInputChecker = new P2PInputChecker();
 
@@ -52,7 +57,7 @@ public class P2PMessenger {
      * @param name of the created messenger
      */
     public P2PMessenger(String name) {
-        TAG = P2PConstants.P2P_TAG + ".Messenger." + name;
+        TAG = P2PGlobals.P2P_TAG + ".Messenger." + name;
         mName = name;
         mOwnMessenger = createClientMessenger();
     }
@@ -84,7 +89,7 @@ public class P2PMessenger {
         public void handleMessage(Message msg) {
             Message message = Message.obtain(msg);
             switch (message.what) {
-                case P2PConstants.MSG_SRVC_REGISTER_ACK:
+                case P2PMessageIDs.MSG_SRVC_REGISTER_ACK:
                     new Thread(new P2PThread(null) {
                         @Override
                         public void run() {
@@ -94,7 +99,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_DATA:
+                case P2PMessageIDs.MSG_CLIENT_P2P_DATA:
                     Log.d(TAG, "received data from " + message.getData().getString("jid"));
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
@@ -105,7 +110,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_PRESENCE:
+                case P2PMessageIDs.MSG_CLIENT_P2P_PRESENCE:
                     Log.d(TAG, "received presence from " + message.getData().getString("jid"));
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
@@ -116,7 +121,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_CONNECTED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CONNECTED:
                     new Thread(new P2PThread(null) {
                         @Override
                         public void run() {
@@ -126,7 +131,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_DISCONNECTED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DISCONNECTED:
                     new Thread(new P2PThread(null) {
                         @Override
                         public void run() {
@@ -136,7 +141,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -147,7 +152,7 @@ public class P2PMessenger {
                         }
                     }).start();
                     break;
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_AUTHENTICATED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATED:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -158,7 +163,7 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_DATA_SENT:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DATA_SENT:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -169,7 +174,7 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PConstants.MSG_CLIENT_P2P_CONF:
+                case P2PMessageIDs.MSG_CLIENT_P2P_CONF:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -180,7 +185,7 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_ACK_CREDS:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACK_CREDS:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -192,14 +197,34 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PConstants.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
                             for (P2PServiceListener listener: mServiceListeners)
                                 listener.onCredsChanged(mBundle.getString("username"),
-                                                        mBundle.getString("password"));
+                                        mBundle.getString("password"));
+                        }
+                    }).start();
+                    break;
+
+                case P2PMessageIDs.MSG_SRVC_P2P_ERROR:
+                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PServiceErrorListener listener: mServiceErrorListeners) {
+                                int level = mBundle.getInt("level");
+                                String message = mBundle.getString("message");
+                                String detailedMessage = mBundle.getString("detailedMessage");
+                                if (level == P2PErrorLevels.P2P_LEVEL_ERROR)
+                                    listener.onError(message, detailedMessage);
+                                else if (level == P2PErrorLevels.P2P_LEVEL_WARNING)
+                                    listener.onWarning(message, detailedMessage);
+                                else
+                                    Log.w(TAG, "unknown level type:" + level);
+                            }
                         }
                     }).start();
                     break;
@@ -243,7 +268,7 @@ public class P2PMessenger {
      * Send our android messenger back to the service one to setup a full-duplex channel
      */
     private void sendOwnMessenger() {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_REGISTER, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_REGISTER, 0, 0);
         msg.replyTo = mOwnMessenger;
         Bundle bundle = new Bundle();
         bundle.putString("messengerName", mName);
@@ -302,6 +327,14 @@ public class P2PMessenger {
     }
 
 
+    /**
+     * Add a P2PServiceErrorListener to the messenger
+     * @param listener
+     */
+    public void addServiceErrorListener(P2PServiceErrorListener listener) {
+        mServiceErrorListeners.add(listener);
+    }
+
     public void onStart(Context context) {
         Log.d(TAG, "binding to P2P service (" + mName +")");
         mContext = context;
@@ -323,7 +356,7 @@ public class P2PMessenger {
      * Request P2P connection
      */
     public void connect() {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_CONNECT, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_CONNECT, 0, 0);
         sendMsgToP2Psrvc(msg, "requesting P2P connection...");
     }
 
@@ -331,7 +364,7 @@ public class P2PMessenger {
      * Request P2P reconnection
      */
     public void reconnect() {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_RECONNECT, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_RECONNECT, 0, 0);
         sendMsgToP2Psrvc(msg, "requesting P2P disconnection...");
     }
 
@@ -341,7 +374,7 @@ public class P2PMessenger {
      * @param password is the raw password
      */
     public void setCredentials(String username, String password) {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_SET_CREDS, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_CREDS, 0, 0);
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
@@ -362,7 +395,7 @@ public class P2PMessenger {
      *             'reconnectionDelay': (int) delay in seconds before trying to reconnect
      */
     public void setServerConf(Bundle conf) {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_SET_SERVER_CONF, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_SERVER_CONF, 0, 0);
         msg.setData(new Bundle(conf));
         sendMsgToP2Psrvc(msg, "setting P2P conf...");
     }
@@ -371,7 +404,7 @@ public class P2PMessenger {
      * Request Server
      */
     public void requestServerConf() {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_GET_SERVER_CONF, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_GET_SERVER_CONF, 0, 0);
         sendMsgToP2Psrvc(msg, "getting P2P conf...");
     }
 
@@ -382,7 +415,7 @@ public class P2PMessenger {
      * @throws P2PExceptionBadFormat
      */
     public void sendData(Bundle bundle, String to) throws P2PExceptionBadFormat {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_DATA, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_DATA, 0, 0);
         mP2PInputChecker.checkBundle(bundle);
         mP2PInputChecker.checkJID(to);
         // replace 'message' key by 'p2p_message' key for naming consistency
@@ -398,7 +431,7 @@ public class P2PMessenger {
      * @param to is the requested JID
      */
     public void subscribe(String to) {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_SUBSCRIBE, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SUBSCRIBE, 0, 0);
         Bundle bundle = new Bundle();
         bundle.putString("to", to);
         msg.setData(bundle);
@@ -411,7 +444,7 @@ public class P2PMessenger {
      * @param password is the password
      */
     public void createAccount(String username, String password) {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_CREATE_ACCOUNT, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_CREATE_ACCOUNT, 0, 0);
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
@@ -423,7 +456,7 @@ public class P2PMessenger {
      * Request P2P connection status
      */
     public void requestRefreshConnectionStatus() {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_P2P_REFRESH_CONN_STATUS, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_REFRESH_CONN_STATUS, 0, 0);
         sendMsgToP2Psrvc(msg, "requesting P2P connection status...");
     }
 }

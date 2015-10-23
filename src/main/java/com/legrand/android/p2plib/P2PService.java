@@ -17,6 +17,9 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.legrand.android.p2plib.constants.P2PErrorLevels;
+import com.legrand.android.p2plib.constants.P2PGlobals;
+import com.legrand.android.p2plib.constants.P2PMessageIDs;
 import com.legrand.android.p2plib.exceptions.P2PException;
 import com.legrand.android.p2plib.exceptions.P2PExceptionConnError;
 import com.legrand.android.p2plib.listeners.P2PRosterListener;
@@ -49,7 +52,7 @@ import java.util.Set;
  * internal android messenger messages.
  */
 public class P2PService extends Service {
-    public static final String TAG = P2PConstants.P2P_TAG + ".Service";
+    public static final String TAG = P2PGlobals.P2P_TAG + ".Service";
 
     private AbstractXMPPConnection mP2PConnection = null;
     private Messenger mMessenger;
@@ -76,7 +79,7 @@ public class P2PService extends Service {
      */
     private class P2PConnectionListener implements ConnectionListener {
 
-        private static final String TAG = P2PConstants.P2P_TAG + " Conn. listener";
+        private static final String TAG = P2PGlobals.P2P_TAG + " Conn. listener";
 
         @Override
         public void connected(XMPPConnection connection) {
@@ -134,21 +137,21 @@ public class P2PService extends Service {
             Message message = Message.obtain(msg);
 
             switch (message.what) {
-                case P2PConstants.MSG_SRVC_REGISTER:
+                case P2PMessageIDs.MSG_SRVC_REGISTER:
                     // The bound client sent us its messenger! We'll be able to reply to it
                     String messengerName = message.getData().getString("messengerName");
                     mClientMessengers.put(messengerName, message.replyTo);
                     sendSrvcRegisterAck(messengerName);
                     break;
-                case P2PConstants.MSG_SRVC_P2P_DATA:
+                case P2PMessageIDs.MSG_SRVC_P2P_DATA:
                     sendMessageToPeer(message.getData());
                     break;
-                case P2PConstants.MSG_SRVC_P2P_CREATE_ACCOUNT:
+                case P2PMessageIDs.MSG_SRVC_P2P_CREATE_ACCOUNT:
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
                     createAccount(username, password);
                     break;
-                case P2PConstants.MSG_SRVC_P2P_SET_CREDS:
+                case P2PMessageIDs.MSG_SRVC_P2P_SET_CREDS:
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
                     setCredentials(username, password);
@@ -156,35 +159,35 @@ public class P2PService extends Service {
                     if (credsChanged(username, password))
                         sendSrvcCredsChanged(username, password);
                     break;
-                case P2PConstants.MSG_SRVC_P2P_SET_SERVER_CONF:
+                case P2PMessageIDs.MSG_SRVC_P2P_SET_SERVER_CONF:
                     if (setServerConf(message.getData())) {
                         if (mP2PConnection != null && mP2PConnection.isConnected()) {
                             reconnect();
                         }
                     }
                     break;
-                case P2PConstants.MSG_SRVC_P2P_GET_SERVER_CONF:
+                case P2PMessageIDs.MSG_SRVC_P2P_GET_SERVER_CONF:
                     sendServerConfToClientMessengers();
                     break;
-                case P2PConstants.MSG_SRVC_P2P_LOGIN:
+                case P2PMessageIDs.MSG_SRVC_P2P_LOGIN:
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
                     setCredentials(username, password);
                     login(username, password);
                     break;
-                case P2PConstants.MSG_SRVC_P2P_CONNECT:
+                case P2PMessageIDs.MSG_SRVC_P2P_CONNECT:
                     connect();
                     break;
-                case P2PConstants.MSG_SRVC_P2P_DISCONNECT:
+                case P2PMessageIDs.MSG_SRVC_P2P_DISCONNECT:
                     disconnect();
                     break;
-                case P2PConstants.MSG_SRVC_P2P_RECONNECT:
+                case P2PMessageIDs.MSG_SRVC_P2P_RECONNECT:
                     reconnect();
                     break;
-                case P2PConstants.MSG_SRVC_P2P_SUBSCRIBE:
+                case P2PMessageIDs.MSG_SRVC_P2P_SUBSCRIBE:
                     subscribe(message.getData().getString("to"));
                     break;
-                case P2PConstants.MSG_SRVC_P2P_REFRESH_CONN_STATUS:
+                case P2PMessageIDs.MSG_SRVC_P2P_REFRESH_CONN_STATUS:
                     sendConnectionStatusToClientMessengers();
                     break;
                 default:
@@ -241,7 +244,7 @@ public class P2PService extends Service {
         try {
             Set<String> names = mClientMessengers.keySet();
             for(String name: names){
-                Message msg = Message.obtain(null, P2PConstants.MSG_CLIENT_P2P_CONF, 0, 0);
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_CONF, 0, 0);
                 msg.setData(conf);
                 mClientMessengers.get(name).send(msg);
             }
@@ -271,7 +274,7 @@ public class P2PService extends Service {
      * @param messengerName is the clien messenger name
      */
     private void sendSrvcRegisterAck(String messengerName) {
-        Message msg = Message.obtain(null, P2PConstants.MSG_SRVC_REGISTER_ACK, 0, 0);
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_REGISTER_ACK, 0, 0);
         try {
             Log.d(TAG, "received client messenger: " + messengerName + ", sending register ack to it");
             mClientMessengers.get(messengerName).send(msg);
@@ -289,7 +292,7 @@ public class P2PService extends Service {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_ACK_CREDS, bundle);
+        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACK_CREDS, bundle);
     }
 
     /**
@@ -301,7 +304,7 @@ public class P2PService extends Service {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED, bundle);
+        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED, bundle);
     }
 
     /**
@@ -324,7 +327,7 @@ public class P2PService extends Service {
                 } catch (SmackException.AlreadyConnectedException e) {
                     Log.d(TAG, "(already) connected to P2P server");
                 } catch (SmackException | IOException | XMPPException | IllegalArgumentException e) {
-                    Log.w(TAG, "could not connect to P2P");
+                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not connect to P2P server", e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -370,7 +373,7 @@ public class P2PService extends Service {
                         Log.d(TAG, "Already logged into P2P as " + mCurrentUserName);
                     }
                 } catch (SmackException | IOException | XMPPException | IllegalArgumentException e) {
-                    Log.w(TAG, "could not log into P2P server");
+                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not log into P2P server", e.getMessage());
                     e.printStackTrace();
                 }
             }
@@ -403,7 +406,7 @@ public class P2PService extends Service {
             mChats.put(JID, chat);
             return chat;
         } catch (P2PExceptionConnError e) {
-            Log.e(TAG, "could not create chat for device" + JID + "(" + e.getMessage() +")");
+            sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_ERROR, "could not create chat for device " + JID, e.getMessage());
             return null;
         }
     }
@@ -461,13 +464,44 @@ public class P2PService extends Service {
                     Bundle bundle = new Bundle();
                     bundle.putString("username", username);
                     bundle.putString("password", password);
-                    sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED, bundle);
+                    sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED, bundle);
                 } catch (SmackException|XMPPException|P2PExceptionConnError e) {
-                    Log.e(TAG, "error when creating xmpp account for: " + username + "(" + e.getMessage() + ")");
+                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_ERROR, "error when creating xmpp account for: " + username, e.getMessage());
                     e.printStackTrace();
                 }
             }
         }).start();
+    }
+
+
+    /**
+     * Send error from this service to the client messengers (see: P2PMessenger)
+     * @param level is the error level (see. P2PErrorLevels)
+     * @param message is the error message
+     * @param detailedMessage is an optional detailed error message
+     */
+    private void sendErrorToClientMessengers(int level, String message, String detailedMessage) {
+        Bundle error = new Bundle();
+        error.putInt("level", level);
+        error.putString("message", message);
+        error.putString("detailedMessage", detailedMessage);
+
+        if (level == P2PErrorLevels.P2P_LEVEL_ERROR)
+            Log.e(TAG, message + "(" + detailedMessage + ")");
+        else
+            Log.w(TAG, message + "(" + detailedMessage + ")");
+
+        try {
+            Set<String> names = mClientMessengers.keySet();
+            for(String name: names){
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_ERROR, 0, 0);
+                msg.setData(error);
+                mClientMessengers.get(name).send(msg);
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "could not send error to client messengers");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -478,7 +512,7 @@ public class P2PService extends Service {
         try {
             Set<String> names = mClientMessengers.keySet();
             for(String name: names){
-                Message msg = Message.obtain(null, P2PConstants.MSG_CLIENT_P2P_DATA, 0, 0);
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_DATA, 0, 0);
                 msg.setData(bundle);
                 mClientMessengers.get(name).send(msg);
             }
@@ -495,22 +529,22 @@ public class P2PService extends Service {
         Bundle bundle;
 
         if (mP2PConnection == null) {
-            sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_DISCONNECTED, null);
+            sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DISCONNECTED, null);
         } else if (mP2PConnection.isAuthenticated()) {
             bundle = new Bundle();
             bundle.putString("username", mCurrentUserName);
-            sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_AUTHENTICATED, bundle);
+            sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATED, bundle);
         } else if (mP2PConnection.isConnected()) {
-            sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_CONNECTED, null);
+            sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CONNECTED, null);
         } else {
-            sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_DISCONNECTED, null);
+            sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DISCONNECTED, null);
         }
     }
 
 
     /**
      * Send event to client messengers (see: P2PMessenger)
-     * @param event see P2PConstants.java
+     * @param event see P2PMessageIDs.java
      * @param bundle bundle containing event information
      */
     private void sendEventToClientMessengers(int event, Bundle bundle) {
@@ -536,7 +570,7 @@ public class P2PService extends Service {
         try {
             Set<String> names = mClientMessengers.keySet();
             for(String name: names){
-                Message msg = Message.obtain(null, P2PConstants.MSG_CLIENT_P2P_PRESENCE, 0, 0);
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_PRESENCE, 0, 0);
                 Bundle bundle = P2PUtils.createPresenceBundle(presence);
                 msg.setData(bundle);
                 mClientMessengers.get(name).send(msg);
@@ -567,7 +601,7 @@ public class P2PService extends Service {
                     chat.sendMessage(message);
                     Bundle bundle = new Bundle();
                     bundle.putString("message", message);
-                    sendEventToClientMessengers(P2PConstants.MSG_CLIENT_P2P_EVENT_DATA_SENT, bundle);
+                    sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DATA_SENT, bundle);
                 } catch (SmackException|P2PException e) {
                     Log.e(TAG, "error when sending xmpp message (" + e.getMessage() + ")");
                     e.printStackTrace();
