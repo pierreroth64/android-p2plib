@@ -5,7 +5,7 @@
  * P2P library for Android. Provides control/monitor functionalities to Legrand Things
  */
 
-package com.legrand.android.p2plib;
+package com.legrand.android.p2plib.utils;
 
 import android.os.Bundle;
 
@@ -15,13 +15,13 @@ import android.os.Bundle;
  */
 public class P2PThread implements Runnable {
 
-    Bundle mBundle = null;
+    public Bundle mBundle = null;
 
     /**
      * Constructor expecting a bundle
      * @param bundle to be stored internally
      */
-    P2PThread(Bundle bundle) {
+    public P2PThread(Bundle bundle) {
         mBundle = bundle;
     }
 

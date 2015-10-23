@@ -5,7 +5,7 @@
  * P2P library for Android. Provides control/monitor functionalities to Legrand Things
  */
 
-package com.legrand.android.p2plib;
+package com.legrand.android.p2plib.listeners;
 
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.RosterListener;

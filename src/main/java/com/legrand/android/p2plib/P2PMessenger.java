@@ -25,6 +25,10 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.listeners.P2PEventListener;
+import com.legrand.android.p2plib.listeners.P2PServiceListener;
+import com.legrand.android.p2plib.utils.P2PInputChecker;
+import com.legrand.android.p2plib.utils.P2PThread;
 
 /**
  * The P2PMessenger is an abstraction class that allow client code to communicate

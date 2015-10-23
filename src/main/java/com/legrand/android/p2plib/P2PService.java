@@ -19,6 +19,9 @@ import android.util.Log;
 
 import com.legrand.android.p2plib.exceptions.P2PException;
 import com.legrand.android.p2plib.exceptions.P2PExceptionConnError;
+import com.legrand.android.p2plib.listeners.P2PRosterListener;
+import com.legrand.android.p2plib.utils.P2PThread;
+import com.legrand.android.p2plib.utils.P2PUtils;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
