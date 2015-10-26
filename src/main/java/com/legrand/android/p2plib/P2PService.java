@@ -492,9 +492,9 @@ public class P2PService extends Service {
         error.putString("detailedMessage", detailedMessage);
 
         if (level == P2PErrorLevels.P2P_LEVEL_ERROR)
-            Log.e(TAG, message + "(" + detailedMessage + ")");
+            Log.e(TAG, message + " (" + detailedMessage + ")");
         else
-            Log.w(TAG, message + "(" + detailedMessage + ")");
+            Log.w(TAG, message + " (" + detailedMessage + ")");
 
         try {
             Set<String> names = mClientMessengers.keySet();
