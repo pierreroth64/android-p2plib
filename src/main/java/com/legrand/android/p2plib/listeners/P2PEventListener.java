@@ -34,6 +34,11 @@ public interface P2PEventListener {
     void onAuthenticated(String username);
 
     /**
+     * Handler called when authentication failed with the P2P server
+     */
+    void onAuthenticationFailure(String username, String password);
+
+    /**
      * Handler called when data has been sent to the P2P server
      */
     void onDataSent(String message);

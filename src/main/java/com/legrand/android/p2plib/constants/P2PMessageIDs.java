@@ -36,4 +36,5 @@ public class P2PMessageIDs {
     public static final int MSG_SRVC_P2P_GET_SERVER_CONF = 22;
     public static final int MSG_CLIENT_P2P_CONF = 23;
     public static final int MSG_SRVC_P2P_ERROR = 24;
+    public static final int MSG_CLIENT_P2P_EVENT_AUTHENTICATION_FAILED = 25;
 }

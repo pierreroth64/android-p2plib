@@ -36,6 +36,7 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.sasl.SASLErrorException;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
@@ -374,6 +375,10 @@ public class P2PService extends Service {
                     }
                 } catch (SmackException | IOException | XMPPException | IllegalArgumentException e) {
                     sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not log into P2P server", e.getMessage());
+                    Bundle bundle = new Bundle();
+                    bundle.putString("username", username);
+                    bundle.putString("password", password);
+                    sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATION_FAILED, bundle);
                     e.printStackTrace();
                 }
             }
