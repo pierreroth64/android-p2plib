@@ -390,6 +390,18 @@ public class P2PMessenger {
     }
 
     /**
+     * Request P2P login
+     */
+    public void login(String username, String password) {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_LOGIN, 0, 0);
+        Bundle data = new Bundle();
+        data.putString("username", username);
+        data.putString("password", password);
+        msg.setData(data);
+        sendMsgToP2Psrvc(msg, "requesting P2P login (username: " + username + ")...");
+    }
+
+    /**
      * Sends credentials to P2P service in order to log into the P2P server
      * @param username is the short username (without @mydomain.com)
      * @param password is the raw password
