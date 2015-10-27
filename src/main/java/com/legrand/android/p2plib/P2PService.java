@@ -621,6 +621,7 @@ public class P2PService extends Service {
                     if (chat == null) {
                         throw new P2PException("could not create chat for JID " + to);
                     }
+                    checkConnection();
                     Log.d(TAG, "sending data: " + message + " to " + chat.getParticipant() + "...");
                     chat.sendMessage(message);
                     Bundle bundle = new Bundle();
