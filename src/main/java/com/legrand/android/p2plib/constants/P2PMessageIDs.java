@@ -38,4 +38,5 @@ public class P2PMessageIDs {
     public static final int MSG_SRVC_P2P_ERROR = 24;
     public static final int MSG_CLIENT_P2P_EVENT_AUTHENTICATION_FAILED = 25;
     public static final int MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATION_FAILED = 26;
+    public static final int MSG_SRVC_UNREGISTER = 27;
 }

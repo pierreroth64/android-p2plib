@@ -143,6 +143,11 @@ public class P2PService extends Service {
                     mClientMessengers.put(messengerName, message.replyTo);
                     sendSrvcRegisterAck(messengerName);
                     break;
+                case P2PMessageIDs.MSG_SRVC_UNREGISTER:
+                    messengerName = message.getData().getString("messengerName");
+                    mClientMessengers.remove(messengerName);
+                    Log.d(TAG, "unregistered client messenger: " + messengerName);
+                    break;
                 case P2PMessageIDs.MSG_SRVC_P2P_DATA:
                     sendMessageToPeer(message.getData());
                     break;
@@ -280,7 +285,7 @@ public class P2PService extends Service {
     private void sendSrvcRegisterAck(String messengerName) {
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_REGISTER_ACK, 0, 0);
         try {
-            Log.d(TAG, "received client messenger: " + messengerName + ", sending register ack to it");
+            Log.d(TAG, "registered client messenger: " + messengerName + ", sending ack to it");
             mClientMessengers.get(messengerName).send(msg);
         } catch (RemoteException e) {
             e.printStackTrace();

@@ -372,6 +372,11 @@ public class P2PMessenger {
         Log.d(TAG, "unbinding from P2P service (" + mName + ")");
         mContext = null;
         if (mBound) {
+            Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_UNREGISTER, 0, 0);
+            Bundle data = new Bundle();
+            data.putString("messengerName", mName);
+            msg.setData(data);
+            sendMsgToP2Psrvc(msg, "");
             context.unbindService(mP2PServConnection);
             mBound = false;
         }
