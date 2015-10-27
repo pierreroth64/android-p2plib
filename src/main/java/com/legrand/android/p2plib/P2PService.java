@@ -86,7 +86,6 @@ public class P2PService extends Service {
         public void connected(XMPPConnection connection) {
             Log.d(TAG, "conn state: connected");
             sendConnectionStatusToClientMessengers();
-            login(mCurrentUserName, mCurrentPassword);
         }
 
         @Override
