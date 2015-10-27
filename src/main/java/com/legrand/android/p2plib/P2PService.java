@@ -431,7 +431,6 @@ public class P2PService extends Service {
                 Log.d(TAG, "disconnecting from P2P server...");
                 if (mP2PConnection != null) {
                     mP2PConnection.disconnect();
-                    mP2PConnection = null;
                 }
                 Log.d(TAG, "disconnected from P2P server");
             }
