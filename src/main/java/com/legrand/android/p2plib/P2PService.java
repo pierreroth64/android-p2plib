@@ -477,6 +477,10 @@ public class P2PService extends Service {
                     sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED, bundle);
                 } catch (SmackException|XMPPException|P2PExceptionConnError e) {
                     sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_ERROR, "error when creating account for: " + username, e.getMessage());
+                    Bundle bundle = new Bundle();
+                    bundle.putString("username", username);
+                    bundle.putString("password", password);
+                    sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATION_FAILED, bundle);
                     e.printStackTrace();
                 }
             }

@@ -153,6 +153,18 @@ public class P2PMessenger {
                     }).start();
                     break;
 
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATION_FAILED:
+                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PEventListener listener: mEventListeners)
+                                listener.onAccountCreationFailure(mBundle.getString("username"),
+                                        mBundle.getString("password"));
+                        }
+                    }).start();
+                    break;
+
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATED:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override

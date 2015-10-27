@@ -29,6 +29,11 @@ public interface P2PEventListener {
     void onAccountCreated(String username, String password);
 
     /**
+     * Handler called when account creation failed
+     */
+    void onAccountCreationFailure(String username, String password);
+
+    /**
      * Handler called when authenticated within the P2P server
      */
     void onAuthenticated(String username);
