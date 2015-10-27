@@ -376,8 +376,11 @@ public class P2PService extends Service {
                     } else {
                         Log.d(TAG, "Already logged into P2P as " + mCurrentUserName);
                     }
+                } catch (SmackException.AlreadyLoggedInException e) {
+                    Log.d(TAG, "Already logged into P2P as " + mCurrentUserName);
+                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "Already logged as " + mCurrentUserName);
                 } catch (SmackException | IOException | XMPPException | IllegalArgumentException e) {
-                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not log into P2P server", e.getMessage());
+                    sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_ERROR, "could not log into P2P server", e.getMessage());
                     Bundle bundle = new Bundle();
                     bundle.putString("username", username);
                     bundle.putString("password", password);
@@ -481,6 +484,14 @@ public class P2PService extends Service {
         }).start();
     }
 
+    /**
+     * Send error from this service to the client messengers (see: P2PMessenger)
+     * @param level is the error level (see. P2PErrorLevels)
+     * @param message is the error message
+     */
+    private void sendErrorToClientMessengers(int level, String message) {
+        sendErrorToClientMessengers(level, message, "");
+    }
 
     /**
      * Send error from this service to the client messengers (see: P2PMessenger)
@@ -494,10 +505,15 @@ public class P2PService extends Service {
         error.putString("message", message);
         error.putString("detailedMessage", detailedMessage);
 
+        String fullMessage = message;
+        if (! detailedMessage.equals("")) {
+            fullMessage += " (" + detailedMessage + ")";
+        }
+
         if (level == P2PErrorLevels.P2P_LEVEL_ERROR)
-            Log.e(TAG, message + " (" + detailedMessage + ")");
+            Log.e(TAG, fullMessage);
         else
-            Log.w(TAG, message + " (" + detailedMessage + ")");
+            Log.w(TAG, fullMessage);
 
         try {
             Set<String> names = mClientMessengers.keySet();
