@@ -391,6 +391,8 @@ public class P2PMessenger {
 
     /**
      * Request P2P login
+     * @param username is the P2P username
+     * @param password  is the P2P password
      */
     public void login(String username, String password) {
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_LOGIN, 0, 0);
@@ -399,6 +401,14 @@ public class P2PMessenger {
         data.putString("password", password);
         msg.setData(data);
         sendMsgToP2Psrvc(msg, "requesting P2P login (username: " + username + ")...");
+    }
+
+    /**
+     * Request P2P login with current credentials (see: setCredentials)
+     */
+    public void login() {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_LOGIN, 0, 0);
+        sendMsgToP2Psrvc(msg, "requesting P2P login with current credentials...");
     }
 
     /**

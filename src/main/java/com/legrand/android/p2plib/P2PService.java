@@ -170,9 +170,13 @@ public class P2PService extends Service {
                     sendServerConfToClientMessengers();
                     break;
                 case P2PMessageIDs.MSG_SRVC_P2P_LOGIN:
-                    username = message.getData().getString("username");
-                    password = message.getData().getString("password");
-                    setCredentials(username, password);
+                    if (message.getData() != null) {
+                        username = message.getData().getString("username");
+                        password = message.getData().getString("password");
+                    } else {
+                        username = mCurrentUserName;
+                        password = mCurrentPassword;
+                    }
                     login(username, password);
                     break;
                 case P2PMessageIDs.MSG_SRVC_P2P_CONNECT:
