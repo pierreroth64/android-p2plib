@@ -45,6 +45,27 @@ public class P2PConnectionBuilder {
 
     private static final String TAG = P2PGlobals.P2P_TAG + " Conn. builder";
 
+
+    /**
+     * create a SSLContext (to be used when self-signed certificates are used on the server)
+     * @param conf is a P2PConf object
+     * @return
+     */
+    private SSLContext createSSLContext(P2PConf conf) {
+
+        SSLContext sc = null;
+        try {
+            sc = JavaPinning.forPin(conf.mSSLPin);
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            Log.d(TAG, "error when creating SSLContect");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            Log.d(TAG, "error when creating SSLContect");
+        }
+        return sc;
+    }
+
     /**
      * Create a connection with Legrand default settings
      * @return the configured connection
@@ -100,22 +121,12 @@ public class P2PConnectionBuilder {
     }
 
     /**
-     * create a SSLContext (to be used when self-signed certificates are used on the server)
-     * @param conf is a P2PConf object
-     * @return
+     * Disable automatic reconnection for a given connection
+     * @param conn is the connection handler
      */
-    private SSLContext createSSLContext(P2PConf conf) {
-
-        SSLContext sc = null;
-        try {
-            sc = JavaPinning.forPin(conf.mSSLPin);
-        } catch (KeyManagementException e) {
-            e.printStackTrace();
-            Log.d(TAG, "error when creating SSLContect");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            Log.d(TAG, "error when creating SSLContect");
-        }
-        return sc;
+    public static void disableReconnection(AbstractXMPPConnection conn) {
+        ReconnectionManager connMgr = ReconnectionManager.getInstanceFor(conn);
+        connMgr.disableAutomaticReconnection();
     }
+
 }
