@@ -435,9 +435,21 @@ public class P2PService extends Service {
             public void run() {
                 Log.d(TAG, "disconnecting from P2P server...");
                 if (mP2PConnection != null) {
-                    mP2PConnection.disconnect();
+                    Presence pres = new Presence(Presence.Type.unavailable, "logout", 0, Presence.Mode.away);
+                    try {
+                        Log.d(TAG, "set presence to:" + pres.toString());
+                        P2PConnectionBuilder.disableReconnection(mP2PConnection);
+                        mP2PConnection.disconnect(pres);
+                        clearChats();
+                        mP2PConnection = null;
+                        Log.d(TAG, "disconnected from P2P server");
+                    } catch (SmackException.NotConnectedException e) {
+                        sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not disconnect from P2P server since not connected");
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.d(TAG, "already disconnected from P2P server");
                 }
-                Log.d(TAG, "disconnected from P2P server");
             }
         });
         thread.start();
@@ -445,17 +457,24 @@ public class P2PService extends Service {
     }
 
     /**
+     * Clear current chats with devices
+     */
+    private void clearChats() {
+        mChats.clear();
+    }
+
+    /**
      * Reconnect to the P2P server
      */
     private void reconnect() {
-        Thread thread = disconnect();
         try {
+            Thread thread = disconnect();
             thread.join();
+            connect();
         } catch (InterruptedException e) {
             Log.w(TAG, "disconnect thread was interrupted");
             e.printStackTrace();
         }
-        connect();
     }
 
     /**
