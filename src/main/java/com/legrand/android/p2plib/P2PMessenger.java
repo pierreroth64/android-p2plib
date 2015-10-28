@@ -183,7 +183,18 @@ public class P2PMessenger {
                             Looper.prepare();
                             for (P2PEventListener listener: mEventListeners)
                                 listener.onAuthenticationFailure(mBundle.getString("username"),
-                                                                 mBundle.getString("password"));
+                                        mBundle.getString("password"));
+                        }
+                    }).start();
+                    break;
+
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_REQUESTED_DISCONNECTION_COMPLETE:
+                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PEventListener listener: mEventListeners)
+                                listener.onRequestedDisconnectionComplete();
                         }
                     }).start();
                     break;
@@ -495,7 +506,7 @@ public class P2PMessenger {
         Bundle bundle = new Bundle();
         bundle.putString("to", to);
         msg.setData(bundle);
-        sendMsgToP2Psrvc(msg, "subsribing to " + to + "...");
+        sendMsgToP2Psrvc(msg, "subscribing to " + to + "...");
     }
 
     /**

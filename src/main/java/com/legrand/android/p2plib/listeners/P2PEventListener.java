@@ -24,6 +24,11 @@ public interface P2PEventListener {
     void onDisconnected();
 
     /**
+     * Handler called when disconnection has been requested and is done
+     */
+    void onRequestedDisconnectionComplete();
+
+    /**
      * Handler called when account is created
      */
     void onAccountCreated(String username, String password);

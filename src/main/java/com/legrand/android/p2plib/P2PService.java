@@ -442,6 +442,7 @@ public class P2PService extends Service {
                         mP2PConnection.disconnect(pres);
                         clearChats();
                         mP2PConnection = null;
+                        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_REQUESTED_DISCONNECTION_COMPLETE, null);
                         Log.d(TAG, "disconnected from P2P server");
                     } catch (SmackException.NotConnectedException e) {
                         sendErrorToClientMessengers(P2PErrorLevels.P2P_LEVEL_WARNING, "could not disconnect from P2P server since not connected");
