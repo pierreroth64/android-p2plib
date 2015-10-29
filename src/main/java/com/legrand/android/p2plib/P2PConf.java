@@ -8,6 +8,9 @@
 package com.legrand.android.p2plib;
 
 import android.os.Bundle;
+import android.util.Log;
+
+import com.legrand.android.p2plib.constants.P2PGlobals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +19,8 @@ import java.util.List;
  * The P2PConf is a container class embedding P2P configuration
  */
 public class P2PConf {
+    private static final String TAG = P2PGlobals.P2P_TAG + " P2PConf";
+
     public String mHostName = "";
     public int mPort = 0;
     public String mDomainName = "";
@@ -73,6 +78,11 @@ public class P2PConf {
      * @return true if minimal conf it ok in this P2PConf object
      */
     public static boolean hasMinimalConf(P2PConf mConf) {
-        return ((mConf.mHostName != "") && (mConf.mPort != 0) && (mConf.mDomainName != ""));
+        Boolean hasMinimal = ((!mConf.mHostName.isEmpty()) && (mConf.mPort != 0) && (!mConf.mDomainName.isEmpty()));
+        if (!hasMinimal) {
+            Log.w(TAG, "minimal conf needed is: hostname, port and domain. " +
+                    "Found: hostname (" + mConf.mHostName + "), port (" + mConf.mPort + "), domain (" + mConf + ")");
+        }
+        return hasMinimal;
     }
 }
