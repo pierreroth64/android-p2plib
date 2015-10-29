@@ -20,13 +20,10 @@ public interface P2PEventListener {
 
     /**
      * Handler called when disconnected from the P2P server
+     * @param requested is set to true when the disconnection is requested
+     *                  and set to false if disconnection is suffered
      */
-    void onDisconnected();
-
-    /**
-     * Handler called when disconnection has been requested and is done
-     */
-    void onRequestedDisconnectionComplete();
+    void onDisconnected(Boolean requested);
 
     /**
      * Handler called when account is created

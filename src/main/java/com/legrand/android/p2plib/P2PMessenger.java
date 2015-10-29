@@ -137,7 +137,7 @@ public class P2PMessenger {
                         public void run() {
                             Looper.prepare();
                             for (P2PEventListener listener: mEventListeners)
-                                listener.onDisconnected();
+                                listener.onDisconnected(false);
                         }
                     }).start();
                     break;
@@ -194,7 +194,7 @@ public class P2PMessenger {
                         public void run() {
                             Looper.prepare();
                             for (P2PEventListener listener: mEventListeners)
-                                listener.onRequestedDisconnectionComplete();
+                                listener.onDisconnected(true);
                         }
                     }).start();
                     break;
