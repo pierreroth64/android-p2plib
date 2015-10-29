@@ -29,6 +29,7 @@ public class P2PConf {
     public Boolean mReconnectionEnabled = false;
     public int mPingInterval = 60;
     public List<String> mSupportedParams = new ArrayList<>();
+    public Boolean mXMPPDebug = false;
 
     public P2PConf() {
         mSupportedParams.add("hostName");
@@ -38,6 +39,7 @@ public class P2PConf {
         mSupportedParams.add("reconnectionDelay");
         mSupportedParams.add("reconnectionEnabled");
         mSupportedParams.add("pingInterval");
+        mSupportedParams.add("XMPPDebug");
     }
 
     /**
@@ -53,6 +55,7 @@ public class P2PConf {
         conf.mReconnDelaySeconds = 5;
         conf.mReconnectionEnabled = true;
         conf.mPingInterval = 120;
+        conf.mXMPPDebug = false;
         return conf;
     }
 
@@ -69,6 +72,7 @@ public class P2PConf {
         bundle.putBoolean("reconnectionEnabled", conf.mReconnectionEnabled);
         bundle.putInt("reconnectionDelay", conf.mReconnDelaySeconds);
         bundle.putInt("pingInterval", conf.mPingInterval);
+        bundle.putBoolean("XMPPDebug", conf.mXMPPDebug);
         return bundle;
     }
 

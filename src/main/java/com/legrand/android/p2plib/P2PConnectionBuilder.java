@@ -10,10 +10,10 @@ package com.legrand.android.p2plib;
 import android.util.Log;
 
 import com.legrand.android.p2plib.constants.P2PGlobals;
-import com.legrand.android.p2plib.constants.P2PMessageIDs;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ReconnectionManager;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smackx.ping.PingManager;
@@ -81,8 +81,13 @@ public class P2PConnectionBuilder {
      * @return the created connection
      */
     public AbstractXMPPConnection createConnection(P2PConf conf) {
-        //SmackConfiguration.DEBUG = true;
+
         AbstractXMPPConnection conn;
+
+        // activate underlying smack xmpp lib debug
+        if (conf.mXMPPDebug) {
+            SmackConfiguration.DEBUG = true;
+        }
 
         // build connection
         XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration.builder();
