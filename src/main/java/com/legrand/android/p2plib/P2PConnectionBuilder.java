@@ -89,7 +89,9 @@ public class P2PConnectionBuilder {
         configBuilder.setServiceName(conf.mDomainName);
         configBuilder.setHost(conf.mHostName);
         configBuilder.setPort(conf.mPort);
-        configBuilder.setCustomSSLContext(createSSLContext(conf));
+        if (!conf.mSSLPin.isEmpty()) {
+            configBuilder.setCustomSSLContext(createSSLContext(conf));
+        }
         configBuilder.setHostnameVerifier(new P2PHostnameVerifier());
         configBuilder.setResource("");
         conn = new XMPPTCPConnection(configBuilder.build());
