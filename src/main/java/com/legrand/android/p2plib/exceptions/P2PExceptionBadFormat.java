@@ -13,6 +13,6 @@ package com.legrand.android.p2plib.exceptions;
 public class P2PExceptionBadFormat extends P2PException {
 
     public P2PExceptionBadFormat(String message) {
-        super("Bad format: " + message);
+        super(message);
     }
 }

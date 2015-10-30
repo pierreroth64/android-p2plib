@@ -13,6 +13,6 @@ package com.legrand.android.p2plib.exceptions;
 public class P2PExceptionConnError extends P2PException {
 
     public P2PExceptionConnError(String message) {
-        super("Connection error: " + message);
+        super(message);
     }
 }

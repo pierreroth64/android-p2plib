@@ -24,6 +24,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.legrand.android.p2plib.auth.P2PCredentialsManager;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
@@ -51,6 +52,7 @@ public class P2PMessenger {
     private List<P2PServiceErrorListener> mServiceErrorListeners = new ArrayList<>();
     private boolean mBound;
     private P2PInputChecker mP2PInputChecker = new P2PInputChecker();
+    private P2PCredentialsManager mCredsManager = new P2PCredentialsManager();
 
     /**
      * Constructor of the P2PMessenger
@@ -336,6 +338,13 @@ public class P2PMessenger {
         }
     }
 
+    private Bundle createUserPasswordBundle(String username, String password) {
+        Bundle bundle = new Bundle();
+        bundle.putString("username", username);
+        bundle.putString("password", password);
+        return bundle;
+    }
+
     ///////// PUBLIC API ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -394,6 +403,12 @@ public class P2PMessenger {
     }
 
     /**
+     * Get current credential manager
+     */
+    public P2PCredentialsManager getCredentialManager() {
+        return mCredsManager;
+    }
+    /**
      * Request P2P connection
      */
     public void connect() {
@@ -422,11 +437,10 @@ public class P2PMessenger {
      * @param username is the P2P username
      * @param password  is the P2P password
      */
-    public void login(String username, String password) {
+    public void login(String username, String password) throws P2PExceptionBadFormat {
+        mCredsManager.checkCredentialsFormat(username, password);
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_LOGIN, 0, 0);
-        Bundle data = new Bundle();
-        data.putString("username", username);
-        data.putString("password", password);
+        Bundle data = createUserPasswordBundle(username, password);
         msg.setData(data);
         sendMsgToP2Psrvc(msg, "requesting P2P login (username: " + username + ")...");
     }
@@ -444,15 +458,22 @@ public class P2PMessenger {
      * @param username is the short username (without @mydomain.com)
      * @param password is the raw password
      */
-    public void setCredentials(String username, String password) {
+    public void setCredentials(String username, String password) throws P2PExceptionBadFormat {
+        mCredsManager.checkCredentialsFormat(username, password);
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_CREDS, 0, 0);
-        Bundle bundle = new Bundle();
-        bundle.putString("username", username);
-        bundle.putString("password", password);
+        Bundle bundle = createUserPasswordBundle(username, password);
         msg.setData(bundle);
         sendMsgToP2Psrvc(msg, "sending credentials to P2P service (user: " + username + ")...");
     }
 
+    /**
+     * Check credentials format
+     * @param username is the short username (without @mydomain.com) to check
+     * @param password is the raw password to check
+     */
+    public void checkCredentialsFormat(String username, String password) throws P2PExceptionBadFormat {
+        getCredentialManager().checkCredentialsFormat(username, password);
+    }
     /**
      * Set the server configuration
      * @param conf must contain the following keys:
