@@ -9,6 +9,7 @@ package com.legrand.android.p2plib.auth;
 
 import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
 
+import org.passay.IllegalCharacterRule;
 import org.passay.LengthRule;
 import org.passay.PasswordData;
 import org.passay.PasswordValidator;
@@ -29,8 +30,10 @@ public class P2PStandardUsernameValidator implements P2PUsernameValidator {
     public void checkUsernameFormat(String username) throws P2PExceptionBadFormat {
         WhitespaceRule r1 = new WhitespaceRule();
         LengthRule r2 = new LengthRule(5, 20);
+        char illegalChars[] = {'@'};
+        IllegalCharacterRule r3 = new IllegalCharacterRule(illegalChars);
 
-        PasswordValidator validator = new PasswordValidator(Arrays.asList(r1, r2));
+        PasswordValidator validator = new PasswordValidator(Arrays.asList(r1, r2, r3));
         PasswordData data = new PasswordData(username);
         RuleResult result = validator.validate(data);
         if (result.isValid())
@@ -41,7 +44,7 @@ public class P2PStandardUsernameValidator implements P2PUsernameValidator {
 
     @Override
     public String getExpectedFormatExplaination() {
-        return "length between 5 and 20" +
+        return "length between 5 and 20, no @, " +
                 " and no whitespace";
     }
 }
