@@ -5,7 +5,7 @@
  * P2P library for Android. Provides control/monitor functionalities to Legrand Things
  */
 
-package com.legrand.android.p2plib.exceptions;
+package com.legrand.android.p2plib.core.exceptions;
 
 /**
  * P2PExceptionConnError is raised when there's something wrong with a connection

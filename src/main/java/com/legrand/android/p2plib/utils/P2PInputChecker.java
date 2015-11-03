@@ -9,7 +9,7 @@ package com.legrand.android.p2plib.utils;
 
 import android.os.Bundle;
 
-import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 
 /**
  * The P2PInputChecker checks for the format of P2P items

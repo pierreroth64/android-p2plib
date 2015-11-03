@@ -7,19 +7,16 @@
 
 package com.legrand.android.p2plib.auth;
 
-import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 
 import org.passay.IllegalCharacterRule;
 import org.passay.LengthRule;
 import org.passay.PasswordData;
 import org.passay.PasswordValidator;
-import org.passay.Rule;
 import org.passay.RuleResult;
 import org.passay.WhitespaceRule;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Standard username validator

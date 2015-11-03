@@ -28,7 +28,7 @@ import com.legrand.android.p2plib.auth.P2PCredentialsManager;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
-import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.listeners.P2PEventListener;
 import com.legrand.android.p2plib.listeners.P2PServiceErrorListener;
 import com.legrand.android.p2plib.listeners.P2PServiceListener;

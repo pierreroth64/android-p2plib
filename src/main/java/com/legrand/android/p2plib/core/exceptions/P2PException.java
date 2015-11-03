@@ -1,4 +1,4 @@
-package com.legrand.android.p2plib.exceptions;
+package com.legrand.android.p2plib.core.exceptions;
 
 /**
  * P2PException is the base class for all the P2P library exceptions

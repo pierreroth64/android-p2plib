@@ -6,7 +6,7 @@
  */
 package com.legrand.android.p2plib.auth;
 
-import com.legrand.android.p2plib.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 
 /**
  * P2PUsernameValidator is an interface to be implemented by username validators

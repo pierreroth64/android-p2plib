@@ -20,8 +20,8 @@ import android.util.Log;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
-import com.legrand.android.p2plib.exceptions.P2PException;
-import com.legrand.android.p2plib.exceptions.P2PExceptionConnError;
+import com.legrand.android.p2plib.core.exceptions.P2PException;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionConnError;
 import com.legrand.android.p2plib.listeners.P2PRosterListener;
 import com.legrand.android.p2plib.utils.P2PThread;
 import com.legrand.android.p2plib.utils.P2PUtils;
@@ -36,7 +36,6 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
-import org.jivesoftware.smack.sasl.SASLErrorException;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
