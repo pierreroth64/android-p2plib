@@ -4,7 +4,7 @@
  *
  * P2P library for Android. Provides control/monitor functionalities to Legrand Things
  */
-package com.legrand.android.p2plib.auth;
+package com.legrand.android.p2plib.auth.validators;
 
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 

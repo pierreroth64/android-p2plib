@@ -218,7 +218,19 @@ public class P2PMessenger {
                         public void run() {
                             Looper.prepare();
                             for (P2PServiceListener listener: mServiceListeners)
-                                listener.onConfChanged(mBundle);
+                                listener.onReceivedServiceConf(mBundle);
+                        }
+                    }).start();
+                    break;
+
+                case P2PMessageIDs.MSG_CLIENT_P2P_CURRENT_CREDS:
+                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PServiceListener listener: mServiceListeners)
+                                listener.onCurrentCredsReceived(mBundle.getString("username"),
+                                        mBundle.getString("password"));
                         }
                     }).start();
                     break;
@@ -459,6 +471,14 @@ public class P2PMessenger {
         Bundle bundle = createUserPasswordBundle(username, password);
         msg.setData(bundle);
         sendMsgToP2Psrvc(msg, "sending credentials to P2P service (user: " + username + ")...");
+    }
+
+    /**
+     * Request current P2P credentials
+     */
+    public void requestCurrentCredentials() {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_GET_CREDS, 0, 0);
+        sendMsgToP2Psrvc(msg, "requesting current credentials to P2P service...");
     }
 
     /**

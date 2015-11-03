@@ -33,6 +33,13 @@ public interface P2PServiceListener {
     void onCredsChangeFailure(String username, String password, P2PReason reason);
 
     /**
+     * Handler called as a response when creds where requested
+     * @param username is the current P2P username
+     * @param password is the current P2P password
+     */
+    void onCurrentCredsReceived(String username, String password);
+
+    /**
      * Handler called when registering to the P2P service is done
      */
     void onServiceRegisterDone();
@@ -41,6 +48,6 @@ public interface P2PServiceListener {
      * Handler called when P2PService conf changed
      * @param conf
      */
-    void onConfChanged(Bundle conf);
+    void onReceivedServiceConf(Bundle conf);
 
 }

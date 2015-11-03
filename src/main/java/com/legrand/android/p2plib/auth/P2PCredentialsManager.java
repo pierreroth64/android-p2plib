@@ -7,6 +7,14 @@
 
 package com.legrand.android.p2plib.auth;
 
+import android.content.Context;
+
+import com.legrand.android.p2plib.auth.storage.P2PPrefsStorage;
+import com.legrand.android.p2plib.auth.storage.P2PStorageProvider;
+import com.legrand.android.p2plib.auth.validators.P2PPasswordValidator;
+import com.legrand.android.p2plib.auth.validators.P2PStandardUsernameValidator;
+import com.legrand.android.p2plib.auth.validators.P2PStrongPasswordValidator;
+import com.legrand.android.p2plib.auth.validators.P2PUsernameValidator;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 
 /**
@@ -16,10 +24,12 @@ public class P2PCredentialsManager {
 
     private P2PPasswordValidator mPasswordValidator;
     private P2PUsernameValidator mUsernameValidator = null;
+    private P2PStorageProvider mCredsStorage;
 
-    public P2PCredentialsManager() {
+    public P2PCredentialsManager(Context context) {
         setPasswordValidator(getDefaultPasswordValidator());
         setUsernameValidator(getDefaultUsernameValidator());
+        mCredsStorage = new P2PPrefsStorage(context);
     }
 
     /**
@@ -64,4 +74,25 @@ public class P2PCredentialsManager {
         mUsernameValidator.checkUsernameFormat(username);
         mPasswordValidator.checkPasswordStrength(password);
     }
+
+    public void storeCredentials(String username, String password) {
+        mCredsStorage.storeCredentials(username, password);
+    }
+
+    public void clearStoredCredentials() {
+        mCredsStorage.clearCredentials();
+    }
+
+    public String getStoredUsername() {
+        return mCredsStorage.getUsername();
+    }
+
+    public String getStoredPassword() {
+        return mCredsStorage.getPassword();
+    }
+
+    public Boolean hasStoredCredentials() {
+        return (!getStoredUsername().isEmpty() && (!getStoredPassword().isEmpty()));
+    }
+
 }

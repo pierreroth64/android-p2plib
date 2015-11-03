@@ -68,7 +68,6 @@ public class P2PService extends Service {
     private Roster mRoster = null;
     private P2PCredentialsManager mCredsManager = null;
 
-
     public P2PService() {
         mConf = new P2PConf();
     }
@@ -76,7 +75,11 @@ public class P2PService extends Service {
     @Override
     public void onCreate() {
         mMessenger = createMessenger();
-        mCredsManager = new P2PCredentialsManager();
+        mCredsManager = new P2PCredentialsManager(this);
+        if (mCredsManager.hasStoredCredentials()) {
+            mCurrentUserName = mCredsManager.getStoredUsername();
+            mCurrentPassword = mCredsManager.getStoredPassword();
+        }
     }
 
     /***
@@ -165,6 +168,9 @@ public class P2PService extends Service {
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
                     updateCredentials(username, password);
+                    break;
+                case P2PMessageIDs.MSG_SRVC_P2P_GET_CREDS:
+                    sendCurrentCredsToClientMessengers();
                     break;
                 case P2PMessageIDs.MSG_SRVC_P2P_SET_SERVICE_CONF:
                     if (setServiceConf(message.getData())) {
@@ -366,6 +372,7 @@ public class P2PService extends Service {
             mCredsManager.checkCredentialsFormat(username, password);
             mCurrentUserName = username;
             mCurrentPassword = password;
+            mCredsManager.storeCredentials(username, password);
             Log.d(TAG, "credentials set for " + username);
         } catch (P2PExceptionBadFormat e) {
             Log.w(TAG, "credentials could not be set for " + username);
@@ -459,6 +466,7 @@ public class P2PService extends Service {
                         mP2PConnection.disconnect(pres);
                         clearChats();
                         mP2PConnection = null;
+                        clearCredentials();
                         sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_REQUESTED_DISCONNECTION_COMPLETE, null);
                         Log.d(TAG, "disconnected from P2P server");
                     } catch (SmackException.NotConnectedException e) {
@@ -472,6 +480,12 @@ public class P2PService extends Service {
         });
         thread.start();
         return thread;
+    }
+
+    private void clearCredentials() {
+        mCurrentUserName = "";
+        mCurrentPassword = "";
+        mCredsManager.clearStoredCredentials();
     }
 
     /**
@@ -587,6 +601,26 @@ public class P2PService extends Service {
             }
         } catch (RemoteException e) {
             Log.e(TAG, "could not send data to client messengers");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Send current P2P credentials to client messengers (see: P2PMessenger)
+     */
+    private void sendCurrentCredsToClientMessengers() {
+        try {
+            Set<String> names = mClientMessengers.keySet();
+            for(String name: names){
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_CURRENT_CREDS, 0, 0);
+                Bundle bundle = new Bundle();
+                bundle.putString("username", mCurrentUserName);
+                bundle.putString("password", mCurrentPassword);
+                msg.setData(bundle);
+                mClientMessengers.get(name).send(msg);
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "could not send current credentials to client messengers");
             e.printStackTrace();
         }
     }
