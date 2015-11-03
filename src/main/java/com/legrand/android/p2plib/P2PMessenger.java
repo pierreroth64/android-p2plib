@@ -24,10 +24,11 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
-import com.legrand.android.p2plib.auth.P2PCredentialsManager;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
+import com.legrand.android.p2plib.core.P2PErrorCode;
+import com.legrand.android.p2plib.core.P2PReason;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.listeners.P2PEventListener;
 import com.legrand.android.p2plib.listeners.P2PServiceErrorListener;
@@ -52,7 +53,6 @@ public class P2PMessenger {
     private List<P2PServiceErrorListener> mServiceErrorListeners = new ArrayList<>();
     private boolean mBound;
     private P2PInputChecker mP2PInputChecker = new P2PInputChecker();
-    private P2PCredentialsManager mCredsManager = new P2PCredentialsManager();
 
     /**
      * Constructor of the P2PMessenger
@@ -212,7 +212,7 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PMessageIDs.MSG_CLIENT_P2P_CONF:
+                case P2PMessageIDs.MSG_CLIENT_P2P_SERVICE_CONF:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
@@ -223,26 +223,29 @@ public class P2PMessenger {
                     }).start();
                     break;
 
-                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACK_CREDS:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_SUCCESS:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
                             for (P2PServiceListener listener: mServiceListeners)
-                                listener.onReceivedCreds(mBundle.getString("username"),
+                                listener.onCredsChangeSuccess(mBundle.getString("username"),
                                         mBundle.getString("password"));
                         }
                     }).start();
                     break;
 
-                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED:
+                case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_FAILURE:
                     new Thread(new P2PThread(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
+                            P2PErrorCode errorCode = P2PErrorCode.getErrorCodeFromString(mBundle.getString("errorCode"));
+                            String reason = mBundle.getString("reason");
                             for (P2PServiceListener listener: mServiceListeners)
-                                listener.onCredsChanged(mBundle.getString("username"),
-                                        mBundle.getString("password"));
+                                listener.onCredsChangeFailure(mBundle.getString("username"),
+                                        mBundle.getString("password"),
+                                        new P2PReason(errorCode, reason));
                         }
                     }).start();
                     break;
@@ -403,12 +406,6 @@ public class P2PMessenger {
     }
 
     /**
-     * Get current credential manager
-     */
-    public P2PCredentialsManager getCredentialManager() {
-        return mCredsManager;
-    }
-    /**
      * Request P2P connection
      */
     public void connect() {
@@ -437,8 +434,7 @@ public class P2PMessenger {
      * @param username is the P2P username
      * @param password  is the P2P password
      */
-    public void login(String username, String password) throws P2PExceptionBadFormat {
-        mCredsManager.checkCredentialsFormat(username, password);
+    public void login(String username, String password) {
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_LOGIN, 0, 0);
         Bundle data = createUserPasswordBundle(username, password);
         msg.setData(data);
@@ -458,8 +454,7 @@ public class P2PMessenger {
      * @param username is the short username (without @mydomain.com)
      * @param password is the raw password
      */
-    public void setCredentials(String username, String password) throws P2PExceptionBadFormat {
-        mCredsManager.checkCredentialsFormat(username, password);
+    public void setCredentials(String username, String password) {
         Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_CREDS, 0, 0);
         Bundle bundle = createUserPasswordBundle(username, password);
         msg.setData(bundle);
@@ -467,15 +462,7 @@ public class P2PMessenger {
     }
 
     /**
-     * Check credentials format
-     * @param username is the short username (without @mydomain.com) to check
-     * @param password is the raw password to check
-     */
-    public void checkCredentialsFormat(String username, String password) throws P2PExceptionBadFormat {
-        getCredentialManager().checkCredentialsFormat(username, password);
-    }
-    /**
-     * Set the server configuration
+     * Set the service configuration
      * @param conf must contain the following keys:
      *             'hostName': (string) the server hostname
      *             'port': (int) the server port
@@ -486,17 +473,17 @@ public class P2PMessenger {
      *             'reconnectionEnabled: (Boolean) if true, enables automatic reconnectio
      *             'reconnectionDelay': (int) delay in seconds before trying to reconnect
      */
-    public void setServerConf(Bundle conf) {
-        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_SERVER_CONF, 0, 0);
+    public void setServiceConf(Bundle conf) {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_SET_SERVICE_CONF, 0, 0);
         msg.setData(new Bundle(conf));
         sendMsgToP2Psrvc(msg, "setting P2P conf...");
     }
 
     /**
-     * Request Server
+     * Request P2P service configuration
      */
-    public void requestServerConf() {
-        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_GET_SERVER_CONF, 0, 0);
+    public void requestServiceConf() {
+        Message msg = Message.obtain(null, P2PMessageIDs.MSG_SRVC_P2P_GET_SERVICE_CONF, 0, 0);
         sendMsgToP2Psrvc(msg, "getting P2P conf...");
     }
 

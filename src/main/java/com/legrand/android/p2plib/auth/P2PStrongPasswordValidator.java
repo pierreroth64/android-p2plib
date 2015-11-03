@@ -43,6 +43,9 @@ public class P2PStrongPasswordValidator implements P2PPasswordValidator{
 
         WhitespaceRule r3 = new WhitespaceRule();
 
+        if (password == null)
+            throw new P2PExceptionBadFormat("Bad format for password: cannot be null");
+
         PasswordValidator validator = new PasswordValidator(Arrays.asList(r1, r2, r3));
         PasswordData passwordData = new PasswordData(password);
         RuleResult result = validator.validate(passwordData);

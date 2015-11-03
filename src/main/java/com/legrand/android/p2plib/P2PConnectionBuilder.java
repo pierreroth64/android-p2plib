@@ -9,6 +9,7 @@ package com.legrand.android.p2plib;
 
 import android.util.Log;
 
+import com.legrand.android.p2plib.conf.P2PConf;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;

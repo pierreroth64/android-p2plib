@@ -18,9 +18,8 @@ public class P2PCredentialsManager {
     private P2PUsernameValidator mUsernameValidator = null;
 
     public P2PCredentialsManager() {
-        mPasswordValidator = getDefaultPasswordValidator();
-        mUsernameValidator = getDefaultUsernameValidator();
-
+        setPasswordValidator(getDefaultPasswordValidator());
+        setUsernameValidator(getDefaultUsernameValidator());
     }
 
     /**

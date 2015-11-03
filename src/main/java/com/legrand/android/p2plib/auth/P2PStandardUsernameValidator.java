@@ -7,6 +7,7 @@
 
 package com.legrand.android.p2plib.auth;
 
+import com.legrand.android.p2plib.core.exceptions.P2PException;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 
 import org.passay.IllegalCharacterRule;
@@ -29,6 +30,9 @@ public class P2PStandardUsernameValidator implements P2PUsernameValidator {
         LengthRule r2 = new LengthRule(5, 20);
         char illegalChars[] = {'@'};
         IllegalCharacterRule r3 = new IllegalCharacterRule(illegalChars);
+
+        if (username == null)
+            throw new P2PExceptionBadFormat("Bad format for username: cannot be null");
 
         PasswordValidator validator = new PasswordValidator(Arrays.asList(r1, r2, r3));
         PasswordData data = new PasswordData(username);

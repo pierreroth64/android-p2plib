@@ -17,10 +17,14 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.legrand.android.p2plib.auth.P2PCredentialsManager;
+import com.legrand.android.p2plib.conf.P2PConf;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
+import com.legrand.android.p2plib.core.P2PErrorCode;
 import com.legrand.android.p2plib.core.exceptions.P2PException;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionConnError;
 import com.legrand.android.p2plib.listeners.P2PRosterListener;
 import com.legrand.android.p2plib.utils.P2PThread;
@@ -58,10 +62,11 @@ public class P2PService extends Service {
     private Messenger mMessenger;
     private Hashtable<String, Messenger> mClientMessengers = new Hashtable<>(); // Messenger name <-> Messenger object
     private Hashtable<String, Chat> mChats = new Hashtable<>(); // JID <-> Chat object
-    public String mCurrentUserName = "";
-    public String mCurrentPassword = "";
+    private String mCurrentUserName = "";
+    private String mCurrentPassword = "";
     private P2PConf mConf;
     private Roster mRoster = null;
+    private P2PCredentialsManager mCredsManager = null;
 
 
     public P2PService() {
@@ -71,6 +76,7 @@ public class P2PService extends Service {
     @Override
     public void onCreate() {
         mMessenger = createMessenger();
+        mCredsManager = new P2PCredentialsManager();
     }
 
     /***
@@ -158,25 +164,23 @@ public class P2PService extends Service {
                 case P2PMessageIDs.MSG_SRVC_P2P_SET_CREDS:
                     username = message.getData().getString("username");
                     password = message.getData().getString("password");
-                    setCredentials(username, password);
-                    sendSrvcCredsAck(username, password);
-                    if (credsChanged(username, password))
-                        sendSrvcCredsChanged(username, password);
+                    updateCredentials(username, password);
                     break;
-                case P2PMessageIDs.MSG_SRVC_P2P_SET_SERVER_CONF:
-                    if (setServerConf(message.getData())) {
+                case P2PMessageIDs.MSG_SRVC_P2P_SET_SERVICE_CONF:
+                    if (setServiceConf(message.getData())) {
                         if (mP2PConnection != null && mP2PConnection.isConnected()) {
                             reconnect();
                         }
                     }
                     break;
-                case P2PMessageIDs.MSG_SRVC_P2P_GET_SERVER_CONF:
-                    sendServerConfToClientMessengers();
+                case P2PMessageIDs.MSG_SRVC_P2P_GET_SERVICE_CONF:
+                    sendServiceConfToClientMessengers();
                     break;
                 case P2PMessageIDs.MSG_SRVC_P2P_LOGIN:
-                    if (message.getData() != null) {
+                    if (bundleContainsUserCreds(message.getData())) {
                         username = message.getData().getString("username");
                         password = message.getData().getString("password");
+                        updateCredentials(username, password);
                     } else {
                         username = mCurrentUserName;
                         password = mCurrentPassword;
@@ -205,6 +209,22 @@ public class P2PService extends Service {
         }
     }
 
+    private boolean bundleContainsUserCreds(Bundle data) {
+        return ((data != null) && data.containsKey("username") && data.containsKey("password"));
+    }
+
+    private void updateCredentials(String username, String password) {
+        try {
+            if ((username != mCurrentUserName) && (password != mCurrentPassword)) {
+                Log.d(TAG, "updating credentials for " + username);
+                setCredentials(username, password);
+            }
+            sendSrvcCredsSuccess(username, password);
+        } catch (P2PExceptionBadFormat e) {
+            sendSrvcCredsFailure(username, password, P2PErrorCode.BAD_FORMAT, e.getMessage());
+        }
+    }
+
     /**
      * Check whether the connection is created and raise an exception if not
      * @throws P2PExceptionConnError
@@ -215,11 +235,11 @@ public class P2PService extends Service {
     }
 
     /**
-     * Set server configuration
+     * Set P2P service configuration
      * @param conf bundle with key-value pairs
      * @return true if conf changed
      */
-    private Boolean setServerConf(Bundle conf) {
+    private Boolean setServiceConf(Bundle conf) {
 
         Boolean confChanged = false;
         for (String confKey: conf.keySet()) {
@@ -242,17 +262,17 @@ public class P2PService extends Service {
         if (conf.containsKey("reconnectionDelay"))
             mConf.mReconnDelaySeconds = conf.getInt("reconnectionDelay");
 
-        Log.d(TAG, "Server configuration changed");
+        Log.d(TAG, "P2P service configuration changed");
 
         return confChanged;
     }
 
-    private void sendServerConfToClientMessengers() {
+    private void sendServiceConfToClientMessengers() {
         Bundle conf = P2PConf.createBundleFromConf(mConf);
         try {
             Set<String> names = mClientMessengers.keySet();
             for(String name: names){
-                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_CONF, 0, 0);
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_SERVICE_CONF, 0, 0);
                 msg.setData(conf);
                 mClientMessengers.get(name).send(msg);
             }
@@ -261,20 +281,6 @@ public class P2PService extends Service {
             e.printStackTrace();
         }
 
-    }
-
-
-    /**
-     * Check whether credentials changed
-     * @param username is the given username to be compared to current one
-     * @param password is the given password to be compared to current one
-     * @return true if creds changed
-     */
-    private Boolean credsChanged(String username, String password) {
-        if ((username != mCurrentUserName) || (password != mCurrentPassword))
-            return true;
-        else
-            return false;
     }
 
     /**
@@ -292,27 +298,31 @@ public class P2PService extends Service {
     }
 
     /**
-     * Send a credential acknowledge event to client messengers
+     * Send a credential acknowledge (success) event to client messengers
      * @param username received
      * @param password received
      */
-    private void sendSrvcCredsAck(String username, String password) {
+    private void sendSrvcCredsSuccess(String username, String password) {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACK_CREDS, bundle);
+        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_SUCCESS, bundle);
     }
 
     /**
-     * Send a credential change event to client messengers
+     * Send a credential change event (failure) to client messengers
      * @param username received
      * @param password received
+     * @param errorCode
+     * @param reason
      */
-    private void sendSrvcCredsChanged(String username, String password) {
+    private void sendSrvcCredsFailure(String username, String password, P2PErrorCode errorCode, String reason) {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGED, bundle);
+        bundle.putString("errorCode", errorCode.toString());
+        bundle.putString("reason", reason);
+        sendEventToClientMessengers(P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_FAILURE, bundle);
     }
 
     /**
@@ -349,10 +359,18 @@ public class P2PService extends Service {
      * @param username
      * @param password
      */
-    private void setCredentials(String username, String password) {
-        mCurrentUserName = username;
-        mCurrentPassword = password;
-        Log.d(TAG, "set credentials for " + username);
+    private void setCredentials(String username, String password) throws P2PExceptionBadFormat {
+
+        try {
+            Log.d(TAG, "checking credentials for " + username + "...");
+            mCredsManager.checkCredentialsFormat(username, password);
+            mCurrentUserName = username;
+            mCurrentPassword = password;
+            Log.d(TAG, "credentials set for " + username);
+        } catch (P2PExceptionBadFormat e) {
+            Log.w(TAG, "credentials could not be set for " + username);
+            throw e;
+        }
     }
 
     /**

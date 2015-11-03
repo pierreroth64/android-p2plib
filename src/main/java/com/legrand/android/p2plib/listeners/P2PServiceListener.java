@@ -9,6 +9,8 @@ package com.legrand.android.p2plib.listeners;
 
 import android.os.Bundle;
 
+import com.legrand.android.p2plib.core.P2PReason;
+
 /**
  * The P2PServiceListener interface has to be implemented to be able to listen fo P2P Service
  */
@@ -16,18 +18,19 @@ import android.os.Bundle;
 public interface P2PServiceListener {
 
     /**
-     * Handler called when credentials have been received by the P2P service
-     * @param username the P2P current username
-     * @param password the P2P current password
+     * Handler called when credentials have been successfully received by the P2P service
+     * @param username the P2P new username
+     * @param password the P2P new password
      */
-    void onReceivedCreds(String username, String password);
+    void onCredsChangeSuccess(String username, String password);
 
     /**
-     * Handler called when credentials have changed
-     * @param username the P2P current username
-     * @param password the P2P current password
+     * Handler called when credentials change failed
+     * @param username the P2P username that failed to be set
+     * @param password the P2P password that failed to be set
+     * @param reason the reason why the change failed
      */
-    void onCredsChanged(String username, String password);
+    void onCredsChangeFailure(String username, String password, P2PReason reason);
 
     /**
      * Handler called when registering to the P2P service is done
