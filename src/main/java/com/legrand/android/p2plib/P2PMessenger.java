@@ -138,8 +138,10 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
-                                listener.onDisconnected(false);
+                            for (P2PEventListener listener: mEventListeners) {
+                                P2PReason reason = new P2PReason(P2PErrorCode.FAILED, "disconnection");
+                                listener.onDisconnected(reason);
+                            }
                         }
                     }).start();
                     break;
@@ -148,9 +150,10 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
+                            for (P2PEventListener listener: mEventListeners) {
                                 listener.onAccountCreated(mBundle.getString("username"),
                                         mBundle.getString("password"));
+                            }
                         }
                     }).start();
                     break;
@@ -160,9 +163,10 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
+                            for (P2PEventListener listener: mEventListeners) {
                                 listener.onAccountCreationFailure(mBundle.getString("username"),
                                         mBundle.getString("password"));
+                            }
                         }
                     }).start();
                     break;
@@ -172,8 +176,9 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
+                            for (P2PEventListener listener: mEventListeners) {
                                 listener.onAuthenticated(mBundle.getString("username"));
+                            }
                         }
                     }).start();
                     break;
@@ -183,9 +188,10 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
+                            for (P2PEventListener listener: mEventListeners) {
                                 listener.onAuthenticationFailure(mBundle.getString("username"),
                                         mBundle.getString("password"));
+                            }
                         }
                     }).start();
                     break;
@@ -195,8 +201,10 @@ public class P2PMessenger {
                         @Override
                         public void run() {
                             Looper.prepare();
-                            for (P2PEventListener listener: mEventListeners)
-                                listener.onDisconnected(true);
+                            for (P2PEventListener listener: mEventListeners) {
+                                P2PReason reason = new P2PReason(P2PErrorCode.OK, "user requested disconnection");
+                                listener.onDisconnected(reason);
+                            }
                         }
                     }).start();
                     break;
