@@ -7,6 +7,8 @@
 
 package com.legrand.android.p2plib.listeners;
 
+import com.legrand.android.p2plib.core.P2PReason;
+
 /**
  * The P2PEventListener interface has to be implemented to be able to listen fo P2P events
  */
@@ -20,10 +22,9 @@ public interface P2PEventListener {
 
     /**
      * Handler called when disconnected from the P2P server
-     * @param requested is set to true when the disconnection is requested
-     *                  and set to false if disconnection is suffered
+     * @param reason is an object transporting information about the reason of the disconnection
      */
-    void onDisconnected(Boolean requested);
+    void onDisconnected(P2PReason reason);
 
     /**
      * Handler called when account is created

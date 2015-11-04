@@ -40,6 +40,7 @@ allprojects {
 
 dependencies {
     compile 'org.passay:passay:1.1.0'
+    compile 'se.simbio.encryption:library:1.2.0'
     compile 'eu.geekplace.javapinning:java-pinning-jar:1.0.1'
     compile 'org.igniterealtime.smack:smack-android:4.1.4'
     compile 'org.igniterealtime.smack:smack-android-extensions:4.1.4'

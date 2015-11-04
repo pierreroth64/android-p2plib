@@ -11,31 +11,35 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionFailed;
+
 /**
  * Storage with stores data into android preferences
  */
-public class P2PPrefsStorage implements P2PStorageProvider {
+public class P2PPrefsStorage extends P2PBaseStorage implements P2PStorageProvider {
 
-    final static private String KEY_PREF_P2P_USERNAME = "pref_p2p_username";
-    final static private String KEY_PREF_P2P_PASSWORD = "pref_p2p_password";
-
-    private Context mContext;
+    protected Context mContext;
 
     public P2PPrefsStorage(Context context) {
         mContext = context;
     }
 
-    @Override
-    public void clearCredentials() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(KEY_PREF_P2P_USERNAME, "");
-        editor.putString(KEY_PREF_P2P_PASSWORD, "");
-        editor.commit();
+    protected void checkNotNullData(String data, String errMessage) throws P2PExceptionFailed {
+        if (data == null)
+            throw new P2PExceptionFailed(errMessage);
     }
 
     @Override
-    public void storeCredentials(String username, String password) {
+    public void clearCredentials() throws P2PExceptionFailed {
+        storeCredentials("", "");
+    }
+
+    @Override
+    public void storeCredentials(String username, String password) throws P2PExceptionFailed {
+
+        checkNotNullData(username, "failed to store credentials: username is null");
+        checkNotNullData(password, "failed to store credentials: password is null");
+
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(KEY_PREF_P2P_USERNAME, username);
@@ -44,15 +48,14 @@ public class P2PPrefsStorage implements P2PStorageProvider {
     }
 
     @Override
-    public String getUsername() {
+    public String getUsername() throws P2PExceptionFailed {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
         return sharedPref.getString(KEY_PREF_P2P_USERNAME, "");
     }
 
     @Override
-    public String getPassword() {
+    public String getPassword() throws P2PExceptionFailed {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
         return sharedPref.getString(KEY_PREF_P2P_PASSWORD, "");
-
     }
 }

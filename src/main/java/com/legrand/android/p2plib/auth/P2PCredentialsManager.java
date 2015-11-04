@@ -9,13 +9,14 @@ package com.legrand.android.p2plib.auth;
 
 import android.content.Context;
 
-import com.legrand.android.p2plib.auth.storage.P2PPrefsStorage;
+import com.legrand.android.p2plib.auth.storage.P2PBaseStorage;
 import com.legrand.android.p2plib.auth.storage.P2PStorageProvider;
 import com.legrand.android.p2plib.auth.validators.P2PPasswordValidator;
 import com.legrand.android.p2plib.auth.validators.P2PStandardUsernameValidator;
 import com.legrand.android.p2plib.auth.validators.P2PStrongPasswordValidator;
 import com.legrand.android.p2plib.auth.validators.P2PUsernameValidator;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionFailed;
 
 /**
  * P2PCredentialsManager in charge of passwords, obviously ;)
@@ -29,7 +30,7 @@ public class P2PCredentialsManager {
     public P2PCredentialsManager(Context context) {
         setPasswordValidator(getDefaultPasswordValidator());
         setUsernameValidator(getDefaultUsernameValidator());
-        mCredsStorage = new P2PPrefsStorage(context);
+        mCredsStorage = P2PBaseStorage.getDefaultStorage(context);
     }
 
     /**
@@ -75,24 +76,33 @@ public class P2PCredentialsManager {
         mPasswordValidator.checkPasswordStrength(password);
     }
 
-    public void storeCredentials(String username, String password) {
+    public void storeCredentials(String username, String password) throws P2PExceptionFailed {
         mCredsStorage.storeCredentials(username, password);
     }
 
-    public void clearStoredCredentials() {
+    public void clearStoredCredentials() throws P2PExceptionFailed {
         mCredsStorage.clearCredentials();
     }
 
-    public String getStoredUsername() {
+    public String getStoredUsername() throws P2PExceptionFailed {
         return mCredsStorage.getUsername();
     }
 
-    public String getStoredPassword() {
+    public String getStoredPassword() throws P2PExceptionFailed {
         return mCredsStorage.getPassword();
     }
 
     public Boolean hasStoredCredentials() {
-        return (!getStoredUsername().isEmpty() && (!getStoredPassword().isEmpty()));
+        try {
+            if (!getStoredUsername().isEmpty() && !getStoredPassword().isEmpty()) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (P2PExceptionFailed e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
 }

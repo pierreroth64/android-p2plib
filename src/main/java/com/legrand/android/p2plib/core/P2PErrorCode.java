@@ -12,6 +12,8 @@ package com.legrand.android.p2plib.core;
  */
 public enum P2PErrorCode {
 
+    OK("OK"),
+    FAILED("FAILED"),
     BAD_FORMAT("BAD FORMAT"),
     INVALID("INVALID");
 

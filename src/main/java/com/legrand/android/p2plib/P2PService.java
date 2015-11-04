@@ -26,6 +26,7 @@ import com.legrand.android.p2plib.core.P2PErrorCode;
 import com.legrand.android.p2plib.core.exceptions.P2PException;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionConnError;
+import com.legrand.android.p2plib.core.exceptions.P2PExceptionFailed;
 import com.legrand.android.p2plib.listeners.P2PRosterListener;
 import com.legrand.android.p2plib.utils.P2PThread;
 import com.legrand.android.p2plib.utils.P2PUtils;
@@ -76,9 +77,22 @@ public class P2PService extends Service {
     public void onCreate() {
         mMessenger = createMessenger();
         mCredsManager = new P2PCredentialsManager(this);
-        if (mCredsManager.hasStoredCredentials()) {
-            mCurrentUserName = mCredsManager.getStoredUsername();
-            mCurrentPassword = mCredsManager.getStoredPassword();
+        retrieveAndUpdateCreds();
+    }
+
+    private void retrieveAndUpdateCreds() {
+        try {
+            if (mCredsManager.hasStoredCredentials()) {
+                mCurrentUserName = mCredsManager.getStoredUsername();
+                mCurrentPassword = mCredsManager.getStoredPassword();
+                Log.d(TAG, "retrieved stored credentials for " + mCurrentUserName);
+            } else {
+                throw new P2PExceptionFailed("has no credentials");
+            }
+        } catch (P2PExceptionFailed e) {
+            mCurrentPassword = "";
+            mCurrentUserName = "";
+            Log.w(TAG, "could not retrieve credentials");
         }
     }
 
@@ -228,6 +242,8 @@ public class P2PService extends Service {
             sendSrvcCredsSuccess(username, password);
         } catch (P2PExceptionBadFormat e) {
             sendSrvcCredsFailure(username, password, P2PErrorCode.BAD_FORMAT, e.getMessage());
+        } catch (P2PExceptionFailed e) {
+            sendSrvcCredsFailure(username, password, P2PErrorCode.FAILED, e.getMessage());
         }
     }
 
@@ -365,7 +381,7 @@ public class P2PService extends Service {
      * @param username
      * @param password
      */
-    private void setCredentials(String username, String password) throws P2PExceptionBadFormat {
+    private void setCredentials(String username, String password) throws P2PExceptionBadFormat, P2PExceptionFailed {
 
         try {
             Log.d(TAG, "checking credentials for " + username + "...");
@@ -374,7 +390,7 @@ public class P2PService extends Service {
             mCurrentPassword = password;
             mCredsManager.storeCredentials(username, password);
             Log.d(TAG, "credentials set for " + username);
-        } catch (P2PExceptionBadFormat e) {
+        } catch (P2PExceptionBadFormat|P2PExceptionFailed e) {
             Log.w(TAG, "credentials could not be set for " + username);
             throw e;
         }
@@ -485,7 +501,12 @@ public class P2PService extends Service {
     private void clearCredentials() {
         mCurrentUserName = "";
         mCurrentPassword = "";
-        mCredsManager.clearStoredCredentials();
+        try {
+            mCredsManager.clearStoredCredentials();
+        } catch (P2PExceptionFailed e) {
+            Log.e(TAG, "could not clear credentials (" + e.getMessage() + ")");
+            e.printStackTrace();
+        }
     }
 
     /**
