@@ -36,13 +36,24 @@ public class P2PPrefsStorage extends P2PBaseStorage implements P2PStorageProvide
 
     @Override
     public void storeCredentials(String username, String password) throws P2PExceptionFailed {
+        storeUsername(username);
+        storePassword(password);
+    }
 
+    @Override
+    public void storeUsername(String username) throws P2PExceptionFailed {
         checkNotNullData(username, "failed to store credentials: username is null");
-        checkNotNullData(password, "failed to store credentials: password is null");
-
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(KEY_PREF_P2P_USERNAME, username);
+        editor.commit();
+    }
+
+    @Override
+    public void storePassword(String password) throws P2PExceptionFailed {
+        checkNotNullData(password, "failed to store credentials: password is null");
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(mContext);
+        SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(KEY_PREF_P2P_PASSWORD, password);
         editor.commit();
     }

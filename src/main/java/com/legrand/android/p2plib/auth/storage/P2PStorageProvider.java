@@ -16,6 +16,8 @@ public interface P2PStorageProvider {
 
     void clearCredentials() throws P2PExceptionFailed;
     void storeCredentials(String username, String password) throws P2PExceptionFailed;
+    void storeUsername(String username) throws P2PExceptionFailed;
+    void storePassword(String password) throws P2PExceptionFailed;
     String getUsername() throws P2PExceptionFailed;
     String getPassword() throws P2PExceptionFailed;
 }
