@@ -28,7 +28,7 @@ import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionConnError;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionFailed;
 import com.legrand.android.p2plib.listeners.P2PRosterListener;
-import com.legrand.android.p2plib.utils.P2PThread;
+import com.legrand.android.p2plib.utils.P2PRunnable;
 import com.legrand.android.p2plib.utils.P2PUtils;
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
@@ -77,18 +77,16 @@ public class P2PService extends Service {
     public void onCreate() {
         mMessenger = createMessenger();
         mCredsManager = new P2PCredentialsManager(this);
-        retrieveAndUpdateCreds();
     }
 
     private void retrieveAndUpdateCreds() {
         try {
-            if (mCredsManager.hasStoredCredentials()) {
-                mCurrentUserName = mCredsManager.getStoredUsername();
-                mCurrentPassword = mCredsManager.getStoredPassword();
+            mCurrentUserName = mCredsManager.getStoredUsername();
+            mCurrentPassword = mCredsManager.getStoredPassword();
+            if (!mCurrentUserName.isEmpty())
                 Log.d(TAG, "retrieved stored credentials for " + mCurrentUserName);
-            } else {
-                throw new P2PExceptionFailed("has no credentials");
-            }
+            else
+                Log.d(TAG, "retrieved empty credentials");
         } catch (P2PExceptionFailed e) {
             mCurrentPassword = "";
             mCurrentUserName = "";
@@ -238,6 +236,8 @@ public class P2PService extends Service {
             if ((username != mCurrentUserName) && (password != mCurrentPassword)) {
                 Log.d(TAG, "updating credentials for " + username);
                 setCredentials(username, password);
+            } else {
+                Log.d(TAG, "credentials not updated as they did not change");
             }
             sendSrvcCredsSuccess(username, password);
         } catch (P2PExceptionBadFormat e) {
@@ -405,7 +405,7 @@ public class P2PService extends Service {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        new Thread(new P2PThread(bundle) {
+        new Thread(new P2PRunnable(bundle) {
             public void run() {
                 String username = mBundle.getString("username");
                 String password = mBundle.getString("password");
@@ -539,7 +539,7 @@ public class P2PService extends Service {
         Bundle bundle = new Bundle();
         bundle.putString("username", username);
         bundle.putString("password", password);
-        new Thread(new P2PThread(bundle) {
+        new Thread(new P2PRunnable(bundle) {
             public void run() {
                 String username = mBundle.getString("username");
                 String password = mBundle.getString("password");
@@ -712,7 +712,7 @@ public class P2PService extends Service {
      *               - "p2p_to", string containing the JID
      */
     private void sendMessageToPeer(Bundle bundle) {
-        new Thread(new P2PThread(bundle) {
+        new Thread(new P2PRunnable(bundle) {
             public void run() {
                 String message = mBundle.getString("p2p_msg");
                 String to = mBundle.getString("p2p_to");
@@ -744,6 +744,7 @@ public class P2PService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "P2P Service started");
+        retrieveAndUpdateCreds();
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -787,7 +788,7 @@ public class P2PService extends Service {
     private void subscribe(String to) {
         Bundle bundle = new Bundle();
         bundle.putString("to", to);
-        new Thread(new P2PThread(bundle) {
+        new Thread(new P2PRunnable(bundle) {
             public void run() {
                 String to = mBundle.getString("to");
                 Log.d(TAG, "subscribing to: " + to + "...");

@@ -25,9 +25,6 @@ public class P2PRunnable implements Runnable {
         mBundle = bundle;
     }
 
-    /**
-     * Run the P2P thread
-     */
     @Override
     public void run() {
 

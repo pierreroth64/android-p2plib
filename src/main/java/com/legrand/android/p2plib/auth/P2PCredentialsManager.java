@@ -91,18 +91,4 @@ public class P2PCredentialsManager {
     public String getStoredPassword() throws P2PExceptionFailed {
         return mCredsStorage.getPassword();
     }
-
-    public Boolean hasStoredCredentials() {
-        try {
-            if (!getStoredUsername().isEmpty() && !getStoredPassword().isEmpty()) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (P2PExceptionFailed e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
 }

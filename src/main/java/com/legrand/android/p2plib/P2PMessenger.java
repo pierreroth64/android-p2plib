@@ -34,7 +34,7 @@ import com.legrand.android.p2plib.listeners.P2PEventListener;
 import com.legrand.android.p2plib.listeners.P2PServiceErrorListener;
 import com.legrand.android.p2plib.listeners.P2PServiceListener;
 import com.legrand.android.p2plib.utils.P2PInputChecker;
-import com.legrand.android.p2plib.utils.P2PThread;
+import com.legrand.android.p2plib.utils.P2PRunnable;
 
 /**
  * The P2PMessenger is an abstraction class that allow client code to communicate
@@ -92,7 +92,7 @@ public class P2PMessenger {
             Message message = Message.obtain(msg);
             switch (message.what) {
                 case P2PMessageIDs.MSG_SRVC_REGISTER_ACK:
-                    new Thread(new P2PThread(null) {
+                    new Thread(new P2PRunnable(null) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -103,7 +103,7 @@ public class P2PMessenger {
                     break;
                 case P2PMessageIDs.MSG_CLIENT_P2P_DATA:
                     Log.d(TAG, "received data from " + message.getData().getString("jid"));
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -114,7 +114,7 @@ public class P2PMessenger {
                     break;
                 case P2PMessageIDs.MSG_CLIENT_P2P_PRESENCE:
                     Log.d(TAG, "received presence from " + message.getData().getString("jid"));
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -124,7 +124,7 @@ public class P2PMessenger {
                     }).start();
                     break;
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CONNECTED:
-                    new Thread(new P2PThread(null) {
+                    new Thread(new P2PRunnable(null) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -134,7 +134,7 @@ public class P2PMessenger {
                     }).start();
                     break;
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DISCONNECTED:
-                    new Thread(new P2PThread(null) {
+                    new Thread(new P2PRunnable(null) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -146,7 +146,7 @@ public class P2PMessenger {
                     }).start();
                     break;
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATED:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -159,7 +159,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_ACCOUNT_CREATION_FAILED:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -172,7 +172,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATED:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -184,7 +184,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_AUTHENTICATION_FAILED:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -197,7 +197,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_REQUESTED_DISCONNECTION_COMPLETE:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -210,7 +210,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_DATA_SENT:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -221,7 +221,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_SERVICE_CONF:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -232,7 +232,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_CURRENT_CREDS:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -244,7 +244,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_SUCCESS:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -256,7 +256,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_CLIENT_P2P_EVENT_CREDS_CHANGE_FAILURE:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
@@ -271,7 +271,7 @@ public class P2PMessenger {
                     break;
 
                 case P2PMessageIDs.MSG_SRVC_P2P_ERROR:
-                    new Thread(new P2PThread(new Bundle(message.getData())) {
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
                         @Override
                         public void run() {
                             Looper.prepare();
