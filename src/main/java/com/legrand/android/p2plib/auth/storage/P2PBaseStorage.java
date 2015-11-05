@@ -14,10 +14,9 @@ import android.content.Context;
  */
 public class P2PBaseStorage {
 
-    final static protected String KEY_PREF_P2P_USERNAME = "p2pl";
-    final static protected String KEY_PREF_P2P_PASSWORD = "p2pp";
+    final static protected String KEY_PREF_P2P_CREDS = "p2pcr";
 
     static public P2PStorageProvider getDefaultStorage(Context context) {
-        return new P2PEncryptedPrefsStorageProvider(context);
+        return new P2PJSONEncryptedPrefsStorageProvider(context);
     }
 }

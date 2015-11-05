@@ -8,6 +8,7 @@
 package com.legrand.android.p2plib.auth;
 
 import android.content.Context;
+import android.os.Bundle;
 
 import com.legrand.android.p2plib.auth.storage.P2PBaseStorage;
 import com.legrand.android.p2plib.auth.storage.P2PStorageProvider;
@@ -81,14 +82,10 @@ public class P2PCredentialsManager {
     }
 
     public void clearStoredCredentials() throws P2PExceptionFailed {
-        mCredsStorage.clearCredentials();
+        mCredsStorage.clearStoredCredentials();
     }
 
-    public String getStoredUsername() throws P2PExceptionFailed {
-        return mCredsStorage.getUsername();
-    }
-
-    public String getStoredPassword() throws P2PExceptionFailed {
-        return mCredsStorage.getPassword();
+    public Bundle getStoredCredentials() throws P2PExceptionFailed {
+        return mCredsStorage.getStoredCredentials();
     }
 }

@@ -81,8 +81,9 @@ public class P2PService extends Service {
 
     private void retrieveAndUpdateCreds() {
         try {
-            mCurrentUserName = mCredsManager.getStoredUsername();
-            mCurrentPassword = mCredsManager.getStoredPassword();
+            Bundle creds = mCredsManager.getStoredCredentials();
+            mCurrentUserName = creds.getString("username");
+            mCurrentPassword = creds.getString("password");
             if (!mCurrentUserName.isEmpty())
                 Log.d(TAG, "retrieved stored credentials for " + mCurrentUserName);
             else
