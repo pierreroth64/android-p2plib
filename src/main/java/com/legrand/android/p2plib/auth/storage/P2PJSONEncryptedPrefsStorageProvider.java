@@ -39,7 +39,7 @@ public class P2PJSONEncryptedPrefsStorageProvider extends P2PJSONPrefsStorage im
      */
     private Encryption getEncryptionInstance() {
         if (mEncryption == null) {
-            mEncryption = Encryption.getDefault(mKey, mSalt, mIV);;
+            mEncryption = Encryption.getDefault(mKey, mSalt, mIV);
         }
         return mEncryption;
     }
