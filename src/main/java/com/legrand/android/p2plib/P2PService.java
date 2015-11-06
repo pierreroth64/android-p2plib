@@ -744,9 +744,21 @@ public class P2PService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "P2P Service started");
         retrieveAndUpdateCreds();
+        Log.d(TAG, "P2P Service started");
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        Thread disconnectionThread = disconnect();
+        try {
+            disconnectionThread.join();
+        } catch (InterruptedException e) {
+            Log.w(TAG, "P2P disconnection thread interrupted");
+        }
+        Log.d(TAG, "P2P Service stopped");
+        super.onDestroy();
     }
 
     /**
