@@ -11,9 +11,6 @@ android {
         multiDexEnabled true
     }
     buildTypes {
-        release {
-            consumerProguardFiles 'proguard-project.txt'
-        }
     }
     productFlavors {
     }
