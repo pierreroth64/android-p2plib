@@ -36,7 +36,6 @@ public class P2PJSONPrefsStorage extends P2PBaseStorage implements P2PStoragePro
             creds.put("password", password);
             return creds.toString();
         } catch (JSONException e) {
-            e.printStackTrace();
             throw new P2PExceptionFailed("failed to encode JSON object");
         }
     }
@@ -49,7 +48,6 @@ public class P2PJSONPrefsStorage extends P2PBaseStorage implements P2PStoragePro
             bundle.putString("password", creds.getString("password"));
             return bundle;
         } catch (JSONException e) {
-            e.printStackTrace();
             throw new P2PExceptionFailed("failed to decode JSON object");
         }
     }
