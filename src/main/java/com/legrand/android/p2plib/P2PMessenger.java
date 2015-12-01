@@ -27,6 +27,7 @@ import android.util.Log;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
+import com.legrand.android.p2plib.constants.P2PSubscriptionType;
 import com.legrand.android.p2plib.core.P2PErrorCode;
 import com.legrand.android.p2plib.core.P2PReason;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
@@ -239,6 +240,18 @@ public class P2PMessenger {
                             for (P2PServiceListener listener: mServiceListeners)
                                 listener.onCurrentCredsReceived(mBundle.getString("username"),
                                         mBundle.getString("password"));
+                        }
+                    }).start();
+                    break;
+
+                case P2PMessageIDs.MSG_CLIENT_P2P_SUBSCRIPTION:
+                    new Thread(new P2PRunnable(new Bundle(message.getData())) {
+                        @Override
+                        public void run() {
+                            Looper.prepare();
+                            for (P2PEventListener listener: mEventListeners)
+                                listener.onSubscription(mBundle.getString("address"),
+                                        P2PSubscriptionType.getTypeFromString(mBundle.getString("subscription_type")));
                         }
                     }).start();
                     break;

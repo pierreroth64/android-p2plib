@@ -42,4 +42,5 @@ public class P2PMessageIDs {
     public static final int MSG_CLIENT_P2P_EVENT_REQUESTED_DISCONNECTION_COMPLETE = 28;
     public static final int MSG_SRVC_P2P_GET_CREDS = 29;
     public static final int MSG_CLIENT_P2P_CURRENT_CREDS = 30;
+    public static final int MSG_CLIENT_P2P_SUBSCRIPTION = 31;
 }

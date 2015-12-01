@@ -7,6 +7,7 @@
 
 package com.legrand.android.p2plib.listeners;
 
+import com.legrand.android.p2plib.constants.P2PSubscriptionType;
 import com.legrand.android.p2plib.core.P2PReason;
 
 /**
@@ -51,4 +52,10 @@ public interface P2PEventListener {
      */
     void onDataSent(String message);
 
+    /**
+     * Handler called when subscription changes for a given address
+     * @param address is the JID
+     * @type is the subscription type (to, from, both, etc...)
+     */
+    void onSubscription(String address, P2PSubscriptionType type);
 }

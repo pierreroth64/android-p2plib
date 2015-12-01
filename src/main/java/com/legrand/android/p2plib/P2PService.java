@@ -22,6 +22,7 @@ import com.legrand.android.p2plib.conf.P2PConf;
 import com.legrand.android.p2plib.constants.P2PErrorLevels;
 import com.legrand.android.p2plib.constants.P2PGlobals;
 import com.legrand.android.p2plib.constants.P2PMessageIDs;
+import com.legrand.android.p2plib.constants.P2PSubscriptionType;
 import com.legrand.android.p2plib.core.P2PErrorCode;
 import com.legrand.android.p2plib.core.exceptions.P2PException;
 import com.legrand.android.p2plib.core.exceptions.P2PExceptionBadFormat;
@@ -41,9 +42,12 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.packet.RosterPacket;
 import org.jivesoftware.smackx.iqregister.AccountManager;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Set;
 
@@ -303,7 +307,27 @@ public class P2PService extends Service {
             Log.e(TAG, "could not send server conf to client messengers");
             e.printStackTrace();
         }
+    }
 
+    private void sendSubscriptionToClientMessengers(String address) {
+        Log.d(TAG, mRoster.getEntry(address).toString());
+        RosterEntry entry = mRoster.getEntry(address);
+        P2PSubscriptionType type = P2PUtils.encodeSubscriptionType(entry.getType());
+
+        try {
+            Set<String> names = mClientMessengers.keySet();
+            for(String name: names){
+                Message msg = Message.obtain(null, P2PMessageIDs.MSG_CLIENT_P2P_SUBSCRIPTION, 0, 0);
+                Bundle b = new Bundle();
+                b.putString("address", address);
+                b.putString("subscription_type", type.toString());
+                msg.setData(b);
+                mClientMessengers.get(name).send(msg);
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "could not send subscription type to client messengers");
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -779,6 +803,14 @@ public class P2PService extends Service {
             public void presenceChanged(Presence presence) {
                 mayCreateChatForJID(presence.getFrom());
                 sendPresenceToClientMessengers(presence);
+            }
+
+            @Override
+            public void entriesUpdated(Collection<String> addresses) {
+                super.entriesUpdated(addresses);
+                for (String address : addresses) {
+                    sendSubscriptionToClientMessengers(address);
+                }
             }
         });
         Log.d(TAG, "connection created");
