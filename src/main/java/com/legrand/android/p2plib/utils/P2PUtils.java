@@ -44,7 +44,6 @@ public class P2PUtils {
      * @return true if available
      */
     private static Boolean isAvailableFromType(Presence.Type type) {
-        Log.d("YAHA !", "presence type: " + type.toString());
         if ((type == Presence.Type.available) || (type == Presence.Type.subscribed) || (type == Presence.Type.subscribe))
             return true;
         else
