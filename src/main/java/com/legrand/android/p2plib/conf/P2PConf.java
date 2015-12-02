@@ -85,7 +85,7 @@ public class P2PConf {
         Boolean hasMinimal = ((!mConf.mHostName.isEmpty()) && (mConf.mPort != 0) && (!mConf.mDomainName.isEmpty()));
         if (!hasMinimal) {
             Log.w(TAG, "minimal conf needed is: hostname, port and domain. " +
-                    "Found: hostname (" + mConf.mHostName + "), port (" + mConf.mPort + "), domain (" + mConf + ")");
+                    "Found: hostname (" + mConf.mHostName + "), port (" + mConf.mPort + "), domain (" + mConf.mDomainName + ")");
         }
         return hasMinimal;
     }
