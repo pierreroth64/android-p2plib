@@ -310,7 +310,6 @@ public class P2PService extends Service {
     }
 
     private void sendSubscriptionToClientMessengers(String address) {
-        Log.d(TAG, mRoster.getEntry(address).toString());
         RosterEntry entry = mRoster.getEntry(address);
         P2PSubscriptionType type = P2PUtils.encodeSubscriptionType(entry.getType());
 
