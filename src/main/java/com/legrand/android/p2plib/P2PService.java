@@ -468,7 +468,11 @@ public class P2PService extends Service {
     private Chat mayCreateChatForJID(String JID) {
 
         Chat chat = mChats.get(JID);
-        if (chat != null) return chat;
+        if (chat != null) {
+            return chat;
+        } else {
+            Log.d(TAG, "chat not setup for " + JID + ", creating it...");
+        }
 
         try {
             checkConnection();
